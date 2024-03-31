@@ -1,6 +1,7 @@
 import asyncio
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.middlewares.request_logging import logger
 from loader import db
 
@@ -37,10 +38,11 @@ async def setup_aiogram(dispatcher: Dispatcher, bot: Bot) -> None:
     logger.info("Configured aiogram")
 
 
-# async def database_connected():
-#     await db.create()
-#     # await db.drop_users()
-#     await db.create_table_users()
+async def database_connected():
+    await db.create()
+    # await db.drop_users()
+    await db.create_table_users()
+    await db.create_table_odoblar()
 
 
 async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
@@ -70,7 +72,7 @@ def main():
     from aiogram.fsm.storage.memory import MemoryStorage
 
     allowed_updates = ['message', 'chat_member', 'callback_query']
-    bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     storage = MemoryStorage()
     dispatcher = Dispatcher(storage=storage)
 

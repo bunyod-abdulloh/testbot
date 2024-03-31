@@ -11,13 +11,13 @@ class Database:
     def __init__(self):
         self.pool: Union[Pool, None] = None
 
-    # async def create(self):
-    #     self.pool = await asyncpg.create_pool(
-    #         user=config.DB_USER,
-    #         password=config.DB_PASS,
-    #         host=config.DB_HOST,
-    #         database=config.DB_NAME,
-    #     )
+    async def create(self):
+        self.pool = await asyncpg.create_pool(
+            user=config.DB_USER,
+            password=config.DB_PASS,
+            host=config.DB_HOST,
+            database=config.DB_NAME,
+        )
 
     async def execute(
         self,
@@ -41,6 +41,8 @@ class Database:
                 elif execute:
                     result = await connection.execute(command, *args)
             return result
+
+# ===================== USERS =================
 
     async def create_table_users(self):
         sql = """
@@ -86,3 +88,28 @@ class Database:
 
     async def drop_users(self):
         await self.execute("DROP TABLE Users", execute=True)
+
+# ===================== USERS =================
+    async def create_table_odoblar(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS Odoblar_3 (
+        id SERIAL PRIMARY KEY,
+        question VARCHAR(2500),
+        a_correct VARCHAR(255),
+        b VARCHAR(255),
+        c VARCHAR(255),
+        d VARCHAR(255)                 
+        );
+        """
+        await self.execute(sql, execute=True)
+
+    async def add_question(self, question, a_correct, b, c, d):
+        sql = "INSERT INTO Odoblar_3 (question, a_correct, b, c, d) VALUES($1, $2, $3, $4, $5) returning id"
+        return await self.execute(sql, question, a_correct, b, c, d, fetchrow=True)
+
+    async def select_questions_odoblar(self):
+        sql = "SELECT * FROM Odoblar_3 WHERE "
+        return await self.execute(sql, fetchrow=True)
+
+    async def delete_questions_odoblar(self):
+        await self.execute("DELETE FROM Odoblar_3", execute=True)

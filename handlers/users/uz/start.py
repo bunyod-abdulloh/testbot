@@ -52,10 +52,10 @@ async def do_start(message: types.Message):
 async def check_user_status(call: types.CallbackQuery):
     user_id = call.from_user.id
 
-    user_channel_status = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
-    print(user_channel_status)
+    user_status = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
+
     await call.message.delete()
-    if user_channel_status.status != ChatMemberStatus.LEFT:
+    if user_status.status != ChatMemberStatus.LEFT:
         await call.message.answer(
             text="Assalomu alaykum!",
             reply_markup=uz_start_buttons
@@ -68,28 +68,35 @@ async def check_user_status(call: types.CallbackQuery):
         )
 
 
-@router.chat_member(F.chat.func(lambda chat: chat.id == GROUP_ID))
+@router.chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
 async def join_member(event: types.ChatMemberUpdated):
     user_id = event.from_user.id
-    print(event.chat.type)
-    try:
-        await bot.send_message(
-            chat_id=user_id,
-            text="Siz bot guruhiga qo'shildingiz! Botdan foydalanishingiz mumkin!",
-            reply_markup=uz_start_buttons
-        )
-    except Exception:
-        pass
+
+    CHAT_ID = str(event.chat.id)
+
+    if CHAT_ID == GROUP_ID:
+        try:
+            await bot.send_message(
+                chat_id=user_id,
+                text="Siz bot guruhiga qo'shildingiz! Botdan foydalanishingiz mumkin!",
+                reply_markup=uz_start_buttons
+            )
+        except Exception:
+            pass
 
 
 @router.chat_member(ChatMemberUpdatedFilter(IS_MEMBER >> IS_NOT_MEMBER))
 async def leave_member(event: types.ChatMemberUpdated):
     user_id = event.from_user.id
-    try:
-        await bot.send_message(
-            chat_id=user_id,
-            text="Siz bot guruhidan chiqdingiz! Botdan foydalanish imkoniyati cheklandi!",
-            reply_markup=types.ReplyKeyboardRemove()
-        )
-    except Exception:
-        pass
+
+    CHAT_ID = str(event.chat.id)
+
+    if CHAT_ID == GROUP_ID:
+        try:
+            await bot.send_message(
+                chat_id=user_id,
+                text="Siz bot guruhidan chiqdingiz! Botdan foydalanish imkoniyati cheklandi!",
+                reply_markup=types.ReplyKeyboardRemove()
+            )
+        except Exception:
+            pass
