@@ -49,8 +49,8 @@ async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
     from utils.set_bot_commands import set_default_commands
     from utils.notify_admins import on_startup_notify
 
-    # logger.info("Database connected")
-    # await database_connected()
+    logger.info("Database connected")
+    await database_connected()
 
     logger.info("Starting polling")
     await bot.delete_webhook(drop_pending_updates=True)

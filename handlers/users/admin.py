@@ -1,5 +1,8 @@
 import logging
 import asyncio
+import os
+
+import pandas as pd
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -13,6 +16,8 @@ from utils.pgtoexcel import export_to_excel
 # from utils.pgtoexcel import export_to_excel
 
 router = Router()
+
+admin = int(ADMINS[0])
 
 
 @router.message(Command('allusers'), IsBotAdminFilter(ADMINS))
@@ -68,6 +73,48 @@ async def clean_db(call: types.CallbackQuery, state: FSMContext):
     await state.clear()
 
 
-@router.message(F.document, F.from_user.id.in_({1041847396}))
+async def download_and_save_file(file_id: str, save_path: str):
+    file_info = await bot.get_file(file_id)
+    file_path = os.path.join(save_path, file_info.file_path)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    await bot.download_file(file_info.file_path, file_path)
+
+    return file_path
+
+
+@router.message(IsBotAdminFilter(ADMINS), F.text == "Excel qo'shish")
+async def start_state_add_db(message: types.Message, state: FSMContext):
+    await message.answer("Savollar jamlangan excel hujjatni yuboring")
+    await state.set_state(AdminState.add_data_to_db)
+
+
+@router.message(AdminState.add_data_to_db, F.document)
 async def download_document(message: types.Message):
-    print("salom doc")
+    try:
+        file_path = await download_and_save_file(
+            file_id=message.document.file_id, save_path="downloads/"
+        )
+        df = pd.read_excel(file_path, sheet_name=0)
+        c = 0
+        for row in df.values:
+            c += 1
+
+            if c == 500:
+                await asyncio.sleep(60)
+
+            await db.add_question(
+                question=row[0],
+                a_correct=row[1],
+                b=row[2],
+                c=row[3],
+                d=row[4]
+            )
+        await message.answer(
+            text=f"Ma'lumotlar qabul qilindi!\n\nQabul qilingan savollar soni: {c} ta"
+        )
+        os.remove(file_path)
+
+    except Exception as e:
+        print(e)
+
