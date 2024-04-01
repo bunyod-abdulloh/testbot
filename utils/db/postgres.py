@@ -75,6 +75,10 @@ class Database:
         sql, parameters = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, *parameters, fetchrow=True)
 
+    async def select_user_random(self):
+        sql = "SELECT * FROM Users ORDER BY RANDOM() LIMIT 1"
+        return await self.execute(sql, fetchrow=True)
+
     async def count_users(self):
         sql = "SELECT COUNT(*) FROM Users"
         return await self.execute(sql, fetchval=True)
