@@ -31,3 +31,17 @@ async def sampler(message: types.Message):
     else:
         print(random_user)
 
+
+@router.message(F.location)
+async def send_live_location(message: types.Message):
+    # latitude = message.location.latitude
+    # longitude = message.location.longitude
+    # await message.answer_location(
+    #     latitude=latitude,
+    #     longitude=longitude,
+    #     live_period=60,
+    #     heading=15,
+    #     proximity_alert_radius=2000
+    # )
+
+    print(message)
