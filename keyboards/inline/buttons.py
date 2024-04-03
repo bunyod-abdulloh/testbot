@@ -2,10 +2,9 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-class OfferCallback(CallbackData, prefix="offer"):
-    offer_id: str = None
-    recipient_id: str = None
-    refusal: str = None
+class OfferCallback(CallbackData, prefix="random_opponent"):
+    recipient_id: str
+    theme: str
 
 
 def check_user_ibuttons(status: str):
@@ -40,14 +39,18 @@ def battle_ibuttons(random_opponent: str, opponent_callback: str, rival_offer: s
     return markup
 
 
-def to_offer_ibuttons(playing: str, offer_id: str, refusal: str, callback_refusal: str):
+def to_offer_ibuttons(accedence_text: str, accedence_callback: str, theme: str, cancel_text: str):
+
+    accedence_callback_ = OfferCallback(recipient_id=accedence_callback, theme=theme)
+    # cancel_callback_ = OfferCallback(cancel_id=cancel_callback)
+    print(accedence_callback_.pack())
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=f"🎮 {playing}", callback_data=OfferCallback(offer_id=offer_id))
+                InlineKeyboardButton(text=f"🎮 {accedence_text}", callback_data=accedence_callback_.pack())
             ],
             [
-                InlineKeyboardButton(text=f"❌ {refusal}", callback_data=f"{callback_refusal}")
+                InlineKeyboardButton(text=f"❌ {cancel_text}", callback_data="sa")
             ]
         ]
     )
