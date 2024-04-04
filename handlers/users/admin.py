@@ -90,7 +90,7 @@ async def start_state_add_db(message: types.Message, state: FSMContext):
 
 
 @router.message(AdminState.add_data_to_db, F.document)
-async def download_document(message: types.Message):
+async def download_document(message: types.Message, state: FSMContext):
     try:
         file_path = await download_and_save_file(
             file_id=message.document.file_id, save_path="downloads/"
@@ -117,4 +117,39 @@ async def download_document(message: types.Message):
 
     except Exception as e:
         print(e)
+    await state.clear()
 
+
+@router.message(IsBotAdminFilter(ADMINS), F.text == "Add book")
+async def add_book(message: types.Message, state: FSMContext):
+    await message.answer(
+        text="Savollar beriladigan kitob nomini kiriting"
+    )
+    await state.set_state(AdminState.add_book_to_db)
+
+
+@router.message(AdminState.add_book_to_db)
+async def add_book_to_db(message: types.Message, state: FSMContext):
+    book_name = message.text
+    try:
+        await db.add_table(table_name=book_name)
+        await db.create_table_questions(table_name=book_name)
+
+        if "_qo" in book_name:
+            book_name = book_name.replace("_qo", "(")
+            book_name = book_name.replace("_qy", ")")
+            book_name = book_name.replace("( ", "(")
+
+        if "_o_" in book_name:
+            book_name = book_name.replace("_o_", "o'")
+
+        book_name = book_name.replace("_", " ")
+
+        await message.answer(
+            text=f"Kitob {book_name} qo'shildi"
+        )
+        await state.clear()
+    except Exception as err:
+        await message.answer(
+            text=f"{err}"
+        )

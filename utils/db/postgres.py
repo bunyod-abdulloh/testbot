@@ -42,7 +42,7 @@ class Database:
                     result = await connection.execute(command, *args)
             return result
 
-# ===================== USERS =================
+    # ===================== TABLE | USERS =================
 
     async def create_table_users(self):
         sql = """
@@ -94,9 +94,62 @@ class Database:
         await self.execute("DROP TABLE Users", execute=True)
 
 # ===================== USERS =================
-    async def create_table_odoblar(self):
-        sql = """
-        CREATE TABLE IF NOT EXISTS Odoblar_3 (
+#     async def create_table_odoblar(self):
+#         sql = """
+#         CREATE TABLE IF NOT EXISTS Odoblar_3 (
+#         id SERIAL PRIMARY KEY,
+#         question VARCHAR(2500),
+#         a_correct VARCHAR(255),
+#         b VARCHAR(255),
+#         c VARCHAR(255),
+#         d VARCHAR(255)
+#         );
+#         """
+#         await self.execute(sql, execute=True)
+#
+#     async def add_question_odoblar_3(self, question, a_correct, b, c, d):
+#         sql = "INSERT INTO Odoblar_3 (question, a_correct, b, c, d) VALUES($1, $2, $3, $4, $5) returning id"
+#         return await self.execute(sql, question, a_correct, b, c, d, fetchrow=True)
+#
+#     async def select_odoblar_3(self):
+#         sql = "SELECT * FROM Odoblar_3 WHERE "
+#         return await self.execute(sql, fetchrow=True)
+#
+#     async def delete_odoblar_3(self):
+#         await self.execute("DELETE FROM Odoblar_3", execute=True)
+
+    # ===================== TABLE | TABLES =================
+    async def create_table_tables(self):
+        sql = f"""
+        CREATE TABLE IF NOT EXISTS Tables (
+        id SERIAL PRIMARY KEY,
+        table_name VARCHAR(255) NULL                 
+        );
+        """
+        await self.execute(sql, execute=True)
+
+    async def add_table(self, table_name):
+        sql = f"INSERT INTO Tables (table_name) VALUES($1) returning id"
+        return await self.execute(sql, table_name, fetchrow=True)
+
+    async def select_all_tables(self):
+        sql = f"SELECT * FROM Tables"
+        return await self.execute(sql, fetchrow=True)
+
+    async def select_table_by_name(self, table_name):
+        sql = f"SELECT * FROM Tables WHERE table_name=$1"
+        return await self.execute(sql, table_name, fetchrow=True)
+
+    async def delete_table_by_name(self, table_name):
+        await self.execute(f"DELETE FROM Tables WHERE table_name=$1", table_name, execute=True)
+
+    async def drop_table_tables(self):
+        await self.execute(f"DROP TABLE Tables", execute=True)
+
+    # ===================== TABLE | QUESTIONS =================
+    async def create_table_questions(self, table_name: str):
+        sql = f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
         id SERIAL PRIMARY KEY,
         question VARCHAR(2500),
         a_correct VARCHAR(255),
@@ -107,13 +160,16 @@ class Database:
         """
         await self.execute(sql, execute=True)
 
-    async def add_question(self, question, a_correct, b, c, d):
-        sql = "INSERT INTO Odoblar_3 (question, a_correct, b, c, d) VALUES($1, $2, $3, $4, $5) returning id"
+    async def add_question(self, table_name, question, a_correct, b, c, d):
+        sql = f"INSERT INTO {table_name} (question, a_correct, b, c, d) VALUES($1, $2, $3, $4, $5) returning id"
         return await self.execute(sql, question, a_correct, b, c, d, fetchrow=True)
 
-    async def select_questions_odoblar(self):
-        sql = "SELECT * FROM Odoblar_3 WHERE "
+    async def select_all_questions(self, table_name):
+        sql = f"SELECT * FROM {table_name}"
         return await self.execute(sql, fetchrow=True)
 
-    async def delete_questions_odoblar(self):
-        await self.execute("DELETE FROM Odoblar_3", execute=True)
+    async def delete_table(self, table_name):
+        await self.execute(f"DELETE FROM {table_name}", execute=True)
+
+    async def drop_table(self, table_name):
+        await self.execute(f"DROP TABLE {table_name}", execute=True)

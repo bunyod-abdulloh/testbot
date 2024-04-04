@@ -1,6 +1,8 @@
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from loader import db
+
 
 class OfferCallback(CallbackData, prefix="random_opponent"):
     recipient_id: str
@@ -16,6 +18,10 @@ def check_user_ibuttons(status: str):
         ]
     )
     return markup
+
+
+def battle_main_ibuttons(theme: str):
+    pass
 
 
 def battle_ibuttons(random_opponent: str, opponent_callback: str, rival_offer: str, offer_callback: str,
