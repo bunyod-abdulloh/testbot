@@ -16,6 +16,10 @@ class OfferCallback(CallbackData, prefix="random_opponent"):
     book_id: str
 
 
+class StartPlayingCallback(CallbackData, prefix="start_playing"):
+    user_id: str
+    book_id: int
+
 def check_user_ibuttons(status: str):
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -79,6 +83,18 @@ def to_offer_ibuttons(agree_text: str, agree_id: int, refusal_text: str, book_id
             ],
             [
                 InlineKeyboardButton(text=f"❌ {refusal_text}", callback_data=callback_factory.pack())
+            ]
+        ]
+    )
+    return markup
+
+
+def play_battle_ibuttons(start_text: str, user_id: str, book_id: int):
+    callback_factory = StartPlayingCallback(user_id=user_id, book_id=book_id)
+    markup = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text=f"🚀 {start_text}", callback_data=callback_factory.pack())
             ]
         ]
     )

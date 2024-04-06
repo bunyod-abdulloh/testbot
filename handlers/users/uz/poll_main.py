@@ -4,7 +4,7 @@ from aiogram import Router, F, types
 
 from handlers.users.uz.start import uz_start_buttons
 from keyboards.inline.buttons import battle_ibuttons, battle_main_ibuttons, BattleCallback, to_offer_ibuttons, \
-    OfferCallback
+    OfferCallback, play_battle_ibuttons, StartPlayingCallback
 from loader import bot, db
 
 router = Router()
@@ -22,7 +22,6 @@ async def uz_battle_main(message: types.Message):
 
 @router.callback_query(F.data.startswith("table_"))
 async def get_book_name(call: types.CallbackQuery):
-
     book_id = call.data.split("_")[1]
     await call.message.edit_text(
         text="Bellashuv turini tanlang", reply_markup=battle_ibuttons(
@@ -36,16 +35,19 @@ async def get_book_name(call: types.CallbackQuery):
 @router.callback_query(F.data.startswith("book_id:"))
 async def get_random_in_battle(call: types.CallbackQuery):
     book_id = call.data.split(':')[1]
-    book_name = f"table_{book_id}"
+    book_name_ = await db.select_book_by_id(id_=int(book_id))
+    book_name = book_name_['table_name']
     user_id = call.from_user.id
 
     full_name = call.from_user.full_name
-    markup = to_offer_ibuttons(
-        agree_text="Qabul qilish", agree_id=user_id, refusal_text="Rad qilish", book_id=book_id
-    )
+
     numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
     random_user = await db.select_user_random()
+
+    markup = to_offer_ibuttons(
+        agree_text="Qabul qilish", agree_id=user_id, refusal_text="Rad qilish", book_id=book_id
+    )
 
     if random_user['telegram_id'] == user_id:
         other_random = await db.select_user_random()
@@ -78,11 +80,38 @@ async def get_random_in_battle(call: types.CallbackQuery):
 
 
 @router.callback_query(OfferCallback.filter())
-async def get_opponent(query: types.CallbackQuery, callback_data: OfferCallback):
-    print(callback_data)
-    opponent_id = callback_data.agree_id
+async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback):
+    opponent_id = str(callback_data.agree_id)
+    book_id = int(callback_data.book_id)
+    fullname = call.from_user.full_name
+    user_id = call.from_user.id
+
+    book_name = await db.select_book_by_id(id_=book_id)
+
+    await bot.send_message(
+        chat_id=opponent_id,
+        text=f"Foydalanuvchi {fullname} {book_name['table_name']} kitobi bo'yicha bellashuvga rozilik bildirdi!",
+        reply_markup=play_battle_ibuttons(
+            start_text="Boshlash", user_id=str(user_id), book_id=book_id
+        )
+    )
 
 
+@router.callback_query(StartPlayingCallback.filter())
+async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCallback):
+    first_player = call.from_user.id
+    second_player = callback_data.user_id
+    book_id = callback_data.book_id
+
+    first_check = await db.select_user(telegram_id=first_player)
+    second_check = await db.select_user(telegram_id=second_player)
+
+    if first_check['game_on'] is False and second_check['game_on'] is False:
+        await db.update_gaming_status(telegram_id=first_player, status=True)
+        await db.update_gaming_status(telegram_id=second_player, status=True)
+
+    questions = await db.select_book_by_id(id_=book_id)
+    print(questions)
 
 @router.callback_query(F.data == "uz_back")
 async def uz_back(call: types.CallbackQuery):
@@ -90,4 +119,3 @@ async def uz_back(call: types.CallbackQuery):
     await call.message.answer(
         text="Bosh sahifa", reply_markup=uz_start_buttons
     )
-

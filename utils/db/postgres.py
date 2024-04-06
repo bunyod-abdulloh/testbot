@@ -50,17 +50,11 @@ class Database:
         id SERIAL PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
         username varchar(255) NULL,
-        telegram_id BIGINT NOT NULL UNIQUE
+        telegram_id BIGINT NOT NULL UNIQUE,
+        game_on BOOLEAN DEFAULT FALSE
         );
         """
         await self.execute(sql, execute=True)
-
-    @staticmethod
-    def format_args(sql, parameters: dict):
-        sql += " AND ".join(
-            [f"{item} = ${num}" for num, item in enumerate(parameters.keys(), start=1)]
-        )
-        return sql, tuple(parameters.values())
 
     async def add_user(self, full_name, username, telegram_id):
         sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
@@ -70,14 +64,17 @@ class Database:
         sql = "SELECT * FROM Users"
         return await self.execute(sql, fetch=True)
 
-    async def select_user(self, **kwargs):
-        sql = "SELECT * FROM Users WHERE "
-        sql, parameters = self.format_args(sql, parameters=kwargs)
-        return await self.execute(sql, *parameters, fetchrow=True)
+    async def select_user(self, telegram_id):
+        sql = f"SELECT * FROM Users WHERE telegram_id='{telegram_id}'"
+        return await self.execute(sql, fetchrow=True)
 
     async def select_user_random(self):
-        sql = "SELECT * FROM Users ORDER BY RANDOM() LIMIT 1"
+        sql = "SELECT * FROM Users WHERE game_on IS FALSE ORDER BY RANDOM() LIMIT 1"
         return await self.execute(sql, fetchrow=True)
+
+    async def update_gaming_status(self, status, telegram_id):
+        sql = f"UPDATE Users SET game_on='{status}' WHERE telegram_id='{telegram_id}'"
+        return await self.execute(sql, execute=True)
 
     async def count_users(self):
         sql = "SELECT COUNT(*) FROM Users"
@@ -92,31 +89,6 @@ class Database:
 
     async def drop_users(self):
         await self.execute("DROP TABLE Users", execute=True)
-
-# ===================== USERS =================
-#     async def create_table_odoblar(self):
-#         sql = """
-#         CREATE TABLE IF NOT EXISTS Odoblar_3 (
-#         id SERIAL PRIMARY KEY,
-#         question VARCHAR(2500),
-#         a_correct VARCHAR(255),
-#         b VARCHAR(255),
-#         c VARCHAR(255),
-#         d VARCHAR(255)
-#         );
-#         """
-#         await self.execute(sql, execute=True)
-#
-#     async def add_question_odoblar_3(self, question, a_correct, b, c, d):
-#         sql = "INSERT INTO Odoblar_3 (question, a_correct, b, c, d) VALUES($1, $2, $3, $4, $5) returning id"
-#         return await self.execute(sql, question, a_correct, b, c, d, fetchrow=True)
-#
-#     async def select_odoblar_3(self):
-#         sql = "SELECT * FROM Odoblar_3 WHERE "
-#         return await self.execute(sql, fetchrow=True)
-#
-#     async def delete_odoblar_3(self):
-#         await self.execute("DELETE FROM Odoblar_3", execute=True)
 
     # ===================== TABLE | TABLES =================
     async def create_table_tables(self):
@@ -136,14 +108,12 @@ class Database:
         sql = f"SELECT * FROM Tables"
         return await self.execute(sql, fetch=True)
 
-    async def select_table_by_name(self, table_name):
-        sql = f"SELECT id FROM Tables WHERE table_name=$1"
-        print(table_name)
-        print(sql)
-        return await self.execute(sql, table_name, fetchrow=True)
+    async def select_book_by_id(self, id_):
+        sql = f"SELECT * FROM Tables WHERE id=$1"
+        return await self.execute(sql, id_, fetchrow=True)
 
-    async def delete_table_by_name(self, table_name):
-        await self.execute(f"DELETE FROM Tables WHERE table_name=$1", table_name, execute=True)
+    async def delete_book_by_id(self, id_):
+        await self.execute(f"DELETE FROM Tables WHERE table_name=$1", id_, execute=True)
 
     async def drop_table_tables(self):
         await self.execute(f"DROP TABLE Tables", execute=True)
