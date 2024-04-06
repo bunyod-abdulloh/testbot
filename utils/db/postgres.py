@@ -120,7 +120,7 @@ class Database:
 
     # ===================== TABLE | TABLES =================
     async def create_table_tables(self):
-        sql = f"""
+        sql = """
         CREATE TABLE IF NOT EXISTS Tables (
         id SERIAL PRIMARY KEY,
         table_name VARCHAR(255) NULL                 
@@ -137,7 +137,9 @@ class Database:
         return await self.execute(sql, fetch=True)
 
     async def select_table_by_name(self, table_name):
-        sql = f"SELECT * FROM Tables WHERE table_name=$1"
+        sql = f"SELECT id FROM Tables WHERE table_name=$1"
+        print(table_name)
+        print(sql)
         return await self.execute(sql, table_name, fetchrow=True)
 
     async def delete_table_by_name(self, table_name):

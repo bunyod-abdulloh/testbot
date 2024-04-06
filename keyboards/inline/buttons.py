@@ -12,8 +12,8 @@ class BattleCallback(CallbackData, prefix="battle"):
 
 
 class OfferCallback(CallbackData, prefix="random_opponent"):
-    recipient_id: str
-    theme: str
+    agree_id: int
+    book_id: str
 
 
 def check_user_ibuttons(status: str):
@@ -47,21 +47,18 @@ async def battle_main_ibuttons(back_text: str, back_callback: str):
 
 
 def battle_ibuttons(random_opponent: str, offer_opponent: str, playing_alone: str, alone_callback: str,
-                    back: str, back_callback: str, book_name: str):
-
-    # random = BattleCallback(book_name=book_name, random="random")
-    # offer = BattleCallback(book_name=book_name, offer="offer", random="0")
+                    back: str, back_callback: str, book_id: str):
 
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=f"😎 {random_opponent}", callback_data=f"book_name_{book_name}")
+                InlineKeyboardButton(text=f"😎 {random_opponent}", callback_data=f"book_id:{book_id}")
             ],
             [
                 InlineKeyboardButton(text=f"😊 {offer_opponent}", callback_data="da")
             ],
             [
-                InlineKeyboardButton(text=f"🥷 {playing_alone}", callback_data=f"{alone_callback}")
+                InlineKeyboardButton(text=f"🥷 {playing_alone}", callback_data=f"alone:{alone_callback}")
             ],
             [
                 InlineKeyboardButton(text=f"⬅️ {back}", callback_data=f"{back_callback}")
@@ -71,18 +68,17 @@ def battle_ibuttons(random_opponent: str, offer_opponent: str, playing_alone: st
     return markup
 
 
-def to_offer_ibuttons(accedence_text: str, accedence_callback: str, theme: str, cancel_text: str):
+def to_offer_ibuttons(agree_text: str, agree_id: int, refusal_text: str, book_id: str):
 
-    accedence_callback_ = OfferCallback(recipient_id=accedence_callback, theme=theme)
-    # cancel_callback_ = OfferCallback(cancel_id=cancel_callback)
+    callback_factory = OfferCallback(agree_id=agree_id, book_id=book_id)
 
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=f"🎮 {accedence_text}", callback_data=accedence_callback_.pack())
+                InlineKeyboardButton(text=f"🎮 {agree_text}", callback_data=callback_factory.pack())
             ],
             [
-                InlineKeyboardButton(text=f"❌ {cancel_text}", callback_data="sa")
+                InlineKeyboardButton(text=f"❌ {refusal_text}", callback_data=callback_factory.pack())
             ]
         ]
     )
