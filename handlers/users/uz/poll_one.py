@@ -55,34 +55,3 @@ async def uz_random_opponent(call: types.CallbackQuery):
 async def get_opponent(query: types.CallbackQuery, callback_data: OfferCallback):
     opponent_id = callback_data.recipient_id
     theme = callback_data.theme
-
-
-@router.message(F.location)
-async def send_live_location(message: types.Message):
-    latitude = message.location.latitude
-    longitude = message.location.longitude
-    keyboard = types.InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                types.InlineKeyboardButton(
-                    text=f"{message.from_user.full_name}", callback_data="0"
-                )
-            ],
-            [
-                types.InlineKeyboardButton(
-                    text=f"Stop live location", callback_data=f"{message.message_id}"
-                )
-            ]
-        ]
-    )
-    await bot.send_location(
-        chat_id=GROUP_ID,
-        latitude=latitude,
-        longitude=longitude,
-        live_period=60,
-        heading=15,
-        proximity_alert_radius=1,
-        reply_markup=keyboard
-    )
-
-    print(message.location)

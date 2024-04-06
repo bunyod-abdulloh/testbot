@@ -41,9 +41,8 @@ async def setup_aiogram(dispatcher: Dispatcher, bot: Bot) -> None:
 async def database_connected():
     await db.create()
     # await db.drop_users()
+    # await db.drop_table_tables()
     await db.create_table_users()
-    # await db.create_table_odoblar()
-    # await db.create_table_(table_name="Odoblar_xazinasi_2juz")
     await db.create_table_tables()
 
 

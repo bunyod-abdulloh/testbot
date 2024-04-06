@@ -3,6 +3,7 @@ from aiogram.enums import ChatMemberStatus
 from aiogram.filters import CommandStart, ChatMemberUpdatedFilter, IS_MEMBER, IS_NOT_MEMBER, chat_member_updated, LEFT
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.session.middlewares.request_logging import logger
+from aiogram.fsm.context import FSMContext
 
 from keyboards.inline.buttons import check_user_ibuttons
 from keyboards.reply.main_reply import main_button
@@ -21,7 +22,8 @@ uz_check_buttons = check_user_ibuttons(
 
 
 @router.message(CommandStart())
-async def do_start(message: types.Message):
+async def do_start(message: types.Message, state: FSMContext):
+    await state.clear()
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name
     username = message.from_user.username
