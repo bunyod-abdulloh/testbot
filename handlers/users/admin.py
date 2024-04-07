@@ -173,7 +173,7 @@ async def add_book_to_db(message: types.Message, state: FSMContext):
 
     try:
         add_to_table = await db.add_table(table_name=book_name)
-        await db.create_table_questions(table_number=f"Table_{add_to_table['id']}")
+        await db.create_table_questions(table_name=f"Table_{add_to_table['id']}")
 
         await message.answer(
             text=f"Kitob {book_name} qo'shildi"

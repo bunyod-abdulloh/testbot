@@ -1,10 +1,12 @@
 import asyncio
+import random
 
 from aiogram import Router, F, types
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.users.uz.start import uz_start_buttons
 from keyboards.inline.buttons import battle_ibuttons, battle_main_ibuttons, BattleCallback, to_offer_ibuttons, \
-    OfferCallback, play_battle_ibuttons, StartPlayingCallback
+    OfferCallback, play_battle_ibuttons, StartPlayingCallback, questions_ibuttons
 from loader import bot, db
 
 router = Router()
@@ -110,8 +112,46 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
         await db.update_gaming_status(telegram_id=first_player, status=True)
         await db.update_gaming_status(telegram_id=second_player, status=True)
 
-    questions = await db.select_book_by_id(id_=book_id)
-    print(questions)
+        questions = await db.select_all_questions(table_name=f"table_{book_id}")
+
+        letters = ["A", "B", "C", "D"]
+
+        a = ["a_correct", f"{questions[0][2]}"]
+        b = ["b", f"{questions[0][3]}"]
+        c = ["c", f"{questions[0][4]}"]
+        d = ["d", f"{questions[0][5]}"]
+
+        answers = [a, b, c, d]
+
+        random.shuffle(answers)
+
+        answers_dict = dict(zip(letters, answers))
+
+        questions_text = str()
+
+        for letter, question in answers_dict.items():
+            questions_text += f"{letter}) {question[1]}\n"
+
+        builder = InlineKeyboardBuilder()
+        for letter, callback in answers_dict.items():
+            builder.add(
+                types.InlineKeyboardButton(
+                    text=f"{letter}", callback_data=f"question:{callback[0]}"
+                )
+            )
+        builder.adjust(2, 2)
+
+        await call.message.edit_text(
+            text=f"1. {questions[0]['question']}\n"
+                 f"{questions_text}",
+            reply_markup=builder.as_markup()
+        )
+
+
+@router.callback_query(F.data.startswith("question:"))
+async def get_question(call: types.CallbackQuery):
+    print(call.data)
+
 
 @router.callback_query(F.data == "uz_back")
 async def uz_back(call: types.CallbackQuery):

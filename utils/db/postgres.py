@@ -119,9 +119,9 @@ class Database:
         await self.execute(f"DROP TABLE Tables", execute=True)
 
     # ===================== TABLE | QUESTIONS =================
-    async def create_table_questions(self, table_number: str):
+    async def create_table_questions(self, table_name: str):
         sql = f"""
-        CREATE TABLE IF NOT EXISTS {table_number} (
+        CREATE TABLE IF NOT EXISTS {table_name} (
         id SERIAL PRIMARY KEY,
         question VARCHAR(2500),
         a_correct VARCHAR(255),
@@ -132,16 +132,28 @@ class Database:
         """
         await self.execute(sql, execute=True)
 
-    async def add_question(self, table_number, question, a_correct, b, c, d):
-        sql = f"INSERT INTO {table_number} (question, a_correct, b, c, d) VALUES($1, $2, $3, $4, $5) returning id"
+    async def add_question(self, table_name, question, a_correct, b, c, d):
+        sql = f"INSERT INTO {table_name} (question, a_correct, b, c, d) VALUES($1, $2, $3, $4, $5) returning id"
         return await self.execute(sql, question, a_correct, b, c, d, fetchrow=True)
 
-    async def select_all_questions(self, table_number):
-        sql = f"SELECT * FROM {table_number}"
-        return await self.execute(sql, fetchrow=True)
+    async def select_all_questions(self, table_name):
+        sql = f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1"
+        return await self.execute(sql, fetch=True)
 
-    async def delete_table(self, table_number):
-        await self.execute(f"DELETE FROM {table_number}", execute=True)
+    async def delete_table(self, table_name):
+        await self.execute(f"DELETE FROM {table_name}", execute=True)
 
-    async def drop_table(self, table_number):
-        await self.execute(f"DROP TABLE {table_number}", execute=True)
+    async def drop_table(self, table_name):
+        await self.execute(f"DROP TABLE {table_name}", execute=True)
+
+    # ===================== TABLE | TEMPORARY QUESTIONS =================
+    async def create_table_temporary_questions(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS temporary (
+        id SERIAL PRIMARY KEY,
+        question VARCHAR(2500),
+        correct INT DEFAULT 0                         
+        );
+        """
+        await self.execute(sql, execute=True)
+

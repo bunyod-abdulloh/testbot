@@ -1,3 +1,5 @@
+import random
+
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -19,6 +21,15 @@ class OfferCallback(CallbackData, prefix="random_opponent"):
 class StartPlayingCallback(CallbackData, prefix="start_playing"):
     user_id: str
     book_id: int
+
+
+class QuestionsCallback(CallbackData, prefix="questions"):
+    question_id: int
+    a_correct: str
+    b: str
+    c: str
+    d: str
+
 
 def check_user_ibuttons(status: str):
     markup = InlineKeyboardMarkup(
@@ -99,3 +110,22 @@ def play_battle_ibuttons(start_text: str, user_id: str, book_id: int):
         ]
     )
     return markup
+
+
+def questions_ibuttons():
+    questions = ["a_correct", "b", "c", "d"]
+    random.shuffle(questions)
+    letters = ["A", "B", "C", "D"]
+
+    questions_ = zip(letters, questions)
+
+    builder = InlineKeyboardBuilder()
+    for letter, question in questions_:
+        builder.add(
+            InlineKeyboardButton(
+                text=f"{letter}", callback_data=f"question:{question}"
+            )
+        )
+    builder.adjust(2, 2)
+    return builder.as_markup()
+
