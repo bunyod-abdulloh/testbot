@@ -2,6 +2,7 @@ import asyncio
 import random
 
 from aiogram import Router, F, types
+from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.users.uz.start import uz_start_buttons
@@ -10,6 +11,43 @@ from keyboards.inline.buttons import battle_ibuttons, battle_main_ibuttons, Batt
 from loader import bot, db
 
 router = Router()
+
+
+async def generate_question(book_id, counter, call: types.CallbackQuery):
+    questions = await db.select_all_questions(table_name=f"table_{book_id}")
+
+    letters = ["A", "B", "C", "D"]
+
+    a = ["a", f"{questions[0][2]}"]
+    b = ["b", f"{questions[0][3]}"]
+    c = ["c", f"{questions[0][4]}"]
+    d = ["d", f"{questions[0][5]}"]
+
+    answers = [a, b, c, d]
+
+    random.shuffle(answers)
+
+    answers_dict = dict(zip(letters, answers))
+
+    questions_text = str()
+
+    for letter, question in answers_dict.items():
+        questions_text += f"{letter}) {question[1]}\n"
+
+    builder = InlineKeyboardBuilder()
+    for letter, callback in answers_dict.items():
+        builder.add(
+            types.InlineKeyboardButton(
+                text=f"{letter}", callback_data=f"question:{callback[0]}:{book_id}"
+            )
+        )
+    builder.adjust(2, 2)
+
+    await call.message.edit_text(
+        text=f"{counter}. {questions[0]['question']}\n"
+             f"{questions_text}",
+        reply_markup=builder.as_markup()
+    )
 
 
 @router.message(F.text == "⚔️ Bellashuv")
@@ -100,7 +138,7 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback):
 
 
 @router.callback_query(StartPlayingCallback.filter())
-async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCallback):
+async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCallback, state: FSMContext):
     first_player = call.from_user.id
     second_player = callback_data.user_id
     book_id = callback_data.book_id
@@ -111,46 +149,39 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
     if first_check['game_on'] is False and second_check['game_on'] is False:
         await db.update_gaming_status(telegram_id=first_player, status=True)
         await db.update_gaming_status(telegram_id=second_player, status=True)
-
-        questions = await db.select_all_questions(table_name=f"table_{book_id}")
-
-        letters = ["A", "B", "C", "D"]
-
-        a = ["a_correct", f"{questions[0][2]}"]
-        b = ["b", f"{questions[0][3]}"]
-        c = ["c", f"{questions[0][4]}"]
-        d = ["d", f"{questions[0][5]}"]
-
-        answers = [a, b, c, d]
-
-        random.shuffle(answers)
-
-        answers_dict = dict(zip(letters, answers))
-
-        questions_text = str()
-
-        for letter, question in answers_dict.items():
-            questions_text += f"{letter}) {question[1]}\n"
-
-        builder = InlineKeyboardBuilder()
-        for letter, callback in answers_dict.items():
-            builder.add(
-                types.InlineKeyboardButton(
-                    text=f"{letter}", callback_data=f"question:{callback[0]}"
-                )
-            )
-        builder.adjust(2, 2)
-
-        await call.message.edit_text(
-            text=f"1. {questions[0]['question']}\n"
-                 f"{questions_text}",
-            reply_markup=builder.as_markup()
+        counter = 1
+        await generate_question(
+            book_id=book_id, counter=counter, call=call
+        )
+        await state.update_data(
+            c=counter
         )
 
 
 @router.callback_query(F.data.startswith("question:"))
-async def get_question(call: types.CallbackQuery):
-    print(call.data)
+async def get_question(call: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    c = data['c']
+    answer = call.data.split(":")[1]
+    book_id = call.data.split(":")[2]
+
+    if c == 10:
+        await call.answer(
+            text="Savollar tugadi!", show_alert=True
+        )
+        await call.message.delete()
+
+    else:
+        c += 1
+        await generate_question(
+            book_id=book_id, counter=c, call=call
+        )
+        await state.update_data(
+            c=c
+        )
+        print(answer)
+        if answer == "a":
+            print("javob topildi!")
 
 
 @router.callback_query(F.data == "uz_back")
