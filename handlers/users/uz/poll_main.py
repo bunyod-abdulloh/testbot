@@ -149,12 +149,14 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
     if first_check['game_on'] is False and second_check['game_on'] is False:
         await db.update_gaming_status(telegram_id=first_player, status=True)
         await db.update_gaming_status(telegram_id=second_player, status=True)
+
         counter = 1
+
         await generate_question(
             book_id=book_id, counter=counter, call=call
         )
         await state.update_data(
-            c=counter
+            c=counter, opponent=second_player
         )
 
 
@@ -162,8 +164,10 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
 async def get_question(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     c = data['c']
+    opponent_id = data['opponent']
     answer = call.data.split(":")[1]
     book_id = call.data.split(":")[2]
+    user_id = call.from_user.id
 
     if c == 10:
         await call.answer(
@@ -171,17 +175,45 @@ async def get_question(call: types.CallbackQuery, state: FSMContext):
         )
         await call.message.delete()
 
+        if answer == "a":
+            await db.add_answer(telegram_id=user_id, question_number=c, correct_answer="✅")
+        else:
+            await db.add_answer(telegram_id=user_id, question_number=c, correct_answer="❌")
+
+        await db.update_game_over(game_over=True, telegram_id=user_id)
+
+        opponent_result = await db.select_answers_user(telegram_id=opponent_id)
+        print(opponent_result)
+        if opponent_result:
+            if opponent_result[0]['game_over'] is False:
+                await call.message.edit_text(
+                    text="Raqibingiz hozircha o'yinni yakunlamadi! Natijalar raqibingiz o'yinni yakunlagach yuboriladi!"
+                )
+            else:
+                first_player = await db.select_answers_user(telegram_id=user_id)
+                second_player = await db.select_answers_user(telegram_id=opponent_id)
+
+                first_result = str()
+                second_result = str()
+
+        await state.clear()
+
+        results = await db.select_answers_user(telegram_id=user_id)
+        print(results)
     else:
         c += 1
         await generate_question(
             book_id=book_id, counter=c, call=call
         )
+
         await state.update_data(
             c=c
         )
-        print(answer)
+
         if answer == "a":
-            print("javob topildi!")
+            await db.add_answer(telegram_id=user_id, question_number=c - 1, correct_answer="✅")
+        else:
+            await db.add_answer(telegram_id=user_id, question_number=c - 1, correct_answer="❌")
 
 
 @router.callback_query(F.data == "uz_back")

@@ -48,11 +48,11 @@ class Database:
         sql = """
         CREATE TABLE IF NOT EXISTS Users (
         id SERIAL PRIMARY KEY,
-        full_name VARCHAR(255) NOT NULL,
-        username varchar(255) NULL,
+        full_name VARCHAR(255) NOT NULL,        
         telegram_id BIGINT NOT NULL UNIQUE,
         game_on BOOLEAN DEFAULT FALSE,
-        result INT NULL
+        book_name VARCHAR(255) NULL,
+        result INT NULL        
         );
         """
         await self.execute(sql, execute=True)
@@ -147,14 +147,33 @@ class Database:
     async def drop_table(self, table_name):
         await self.execute(f"DROP TABLE {table_name}", execute=True)
 
-    # ===================== TABLE | TEMPORARY QUESTIONS =================
-    async def create_table_temporary_questions(self):
+    # ===================== TABLE | TEMPORARY ANSWERS =================
+    async def create_table_temporary_answers(self):
         sql = """
         CREATE TABLE IF NOT EXISTS temporary (
         id SERIAL PRIMARY KEY,
-        question VARCHAR(2500),
-        correct INT DEFAULT 0                         
+        telegram_id BIGINT NULL,
+        question_number INT NULL,
+        correct_answer TEXT DEFAULT '❌',
+        game_over BOOLEAN NULL DEFAULT FALSE                         
         );
         """
         await self.execute(sql, execute=True)
 
+    async def add_answer(self, telegram_id, question_number, correct_answer):
+        sql = f"INSERT INTO temporary (telegram_id, question_number, correct_answer) VALUES($1, $2, $3) returning id"
+        return await self.execute(sql, telegram_id, question_number, correct_answer, fetchrow=True)
+
+    async def select_answers_user(self, telegram_id):
+        sql = f"SELECT * FROM temporary WHERE telegram_id='{telegram_id}' ORDER BY question_number"
+        return await self.execute(sql, fetch=True)
+
+    async def update_game_over(self, game_over, telegram_id):
+        sql = f"UPDATE temporary SET game_over='{game_over}' WHERE telegram_id='{telegram_id}'"
+        return await self.execute(sql, execute=True)
+
+    async def delete_answers_user(self, telegram_id):
+        await self.execute(f"DELETE FROM temporary WHERE telegram_id='{telegram_id}'", execute=True)
+
+    async def drop_table_temporary(self):
+        await self.execute(f"DROP TABLE temporary", execute=True)
