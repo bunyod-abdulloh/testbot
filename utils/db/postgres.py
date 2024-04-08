@@ -20,15 +20,15 @@ class Database:
         )
 
     async def execute(
-        self,
-        command,
-        *args,
-        fetch: bool = False,
-        fetchval: bool = False,
-        fetchrow: bool = False,
-        execute: bool = False,
+            self,
+            command,
+            *args,
+            fetch: bool = False,
+            fetchval: bool = False,
+            fetchrow: bool = False,
+            execute: bool = False,
     ):
-        
+
         async with self.pool.acquire() as connection:
             connection: Connection
             async with connection.transaction():
@@ -151,26 +151,45 @@ class Database:
     async def create_table_temporary_answers(self):
         sql = """
         CREATE TABLE IF NOT EXISTS temporary (
-        id SERIAL PRIMARY KEY,
-        telegram_id BIGINT NULL,
-        question_number INT NULL,
-        correct_answer TEXT DEFAULT '❌',
-        game_over BOOLEAN NULL DEFAULT FALSE                         
+            id SERIAL PRIMARY KEY,
+            first_player BIGINT NULL,
+            second_player BIGINT NULL,
+            battle_id INT NULL,
+            question_number INT NULL,
+            answer TEXT DEFAULT '❌',
+            game_over BOOLEAN NULL DEFAULT FALSE                         
         );
         """
         await self.execute(sql, execute=True)
 
-    async def add_answer(self, telegram_id, question_number, correct_answer):
-        sql = f"INSERT INTO temporary (telegram_id, question_number, correct_answer) VALUES($1, $2, $3) returning id"
-        return await self.execute(sql, telegram_id, question_number, correct_answer, fetchrow=True)
+    async def add_answer_first(self, first_player):
+        sql = f"INSERT INTO temporary (first_player) VALUES($1) returning id"
+        return await self.execute(sql, first_player, fetchrow=True)
 
-    async def select_answers_user(self, telegram_id):
-        sql = f"SELECT * FROM temporary WHERE telegram_id='{telegram_id}' ORDER BY question_number"
+    async def add_answer_second(self, second_player, battle_id, question_number, answer):
+        sql = (f"INSERT INTO temporary (second_player, battle_id, question_number, answer)"
+               f" VALUES($1, $2, $3, $4)")
+        return await self.execute(sql, second_player, battle_id, question_number, answer, fetchrow=True)
+
+    async def select_first_player(self, first_player):
+        sql = f"SELECT * FROM temporary WHERE first_player='{first_player}' ORDER BY question_number"
         return await self.execute(sql, fetch=True)
 
-    async def update_game_over(self, game_over, telegram_id):
-        sql = f"UPDATE temporary SET game_over='{game_over}' WHERE telegram_id='{telegram_id}'"
+    async def select_second_player(self, second_player):
+        sql = f"SELECT * FROM temporary WHERE second_player='{second_player}' ORDER BY question_number"
+        return await self.execute(sql, fetch=True)
+
+    async def update_first_player(self, battle_id, first_player):
+        sql = f"UPDATE temporary SET battle_id='{battle_id}' WHERE first_player='{first_player}'"
         return await self.execute(sql, execute=True)
+
+    async def update_game_over_second(self, game_over, second_player):
+        sql = f"UPDATE temporary SET game_over='{game_over}' WHERE second_player='{second_player}'"
+        return await self.execute(sql, execute=True)
+
+    async def get_battle_by_id(self, battle_id):
+        sql = f"SELECT DISTINCT * FROM temporary WHERE battle_id='{battle_id}'"
+        return await self.execute(sql, fetch=True)
 
     async def delete_answers_user(self, telegram_id):
         await self.execute(f"DELETE FROM temporary WHERE telegram_id='{telegram_id}'", execute=True)

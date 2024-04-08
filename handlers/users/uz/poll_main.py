@@ -13,7 +13,7 @@ from loader import bot, db
 router = Router()
 
 
-async def generate_question(book_id, counter, call: types.CallbackQuery):
+async def generate_question(book_id, counter, call: types.CallbackQuery, battle_id):
     questions = await db.select_all_questions(table_name=f"table_{book_id}")
 
     letters = ["A", "B", "C", "D"]
@@ -38,7 +38,7 @@ async def generate_question(book_id, counter, call: types.CallbackQuery):
     for letter, callback in answers_dict.items():
         builder.add(
             types.InlineKeyboardButton(
-                text=f"{letter}", callback_data=f"question:{callback[0]}:{book_id}"
+                text=f"{letter}", callback_data=f"question:{callback[0]}:{book_id}:{battle_id}"
             )
         )
     builder.adjust(2, 2)
@@ -119,48 +119,24 @@ async def get_random_in_battle(call: types.CallbackQuery):
     )
 
 
-@router.callback_query(OfferCallback.filter())
-async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, state: FSMContext):
-    opponent_id = str(callback_data.agree_id)
-    book_id = int(callback_data.book_id)
-    fullname = call.from_user.full_name
-    user_id = call.from_user.id
-
-    book_name = await db.select_book_by_id(id_=book_id)
-
-    await bot.send_message(
-        chat_id=opponent_id,
-        text=f"Foydalanuvchi {fullname} {book_name['table_name']} kitobi bo'yicha bellashuvga rozilik bildirdi!",
-        reply_markup=play_battle_ibuttons(
-            start_text="Boshlash", user_id=str(user_id), book_id=book_id
-        )
-    )
-    counter = 1
-    await state.update_data(opponent=opponent_id, c=counter)
-
-    await generate_question(book_id=book_id, counter=counter, call=call)
-
-
 @router.callback_query(StartPlayingCallback.filter())
 async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCallback, state: FSMContext):
     first_player = call.from_user.id
-    second_player = callback_data.user_id
     book_id = callback_data.book_id
+    battle_id = callback_data.battle_id
 
     first_check = await db.select_user(telegram_id=first_player)
-    second_check = await db.select_user(telegram_id=second_player)
 
-    if first_check['game_on'] is False and second_check['game_on'] is False:
+    if first_check['game_on'] is False:
         await db.update_gaming_status(telegram_id=first_player, status=True)
-        await db.update_gaming_status(telegram_id=second_player, status=True)
 
         counter = 1
 
         await generate_question(
-            book_id=book_id, counter=counter, call=call
+            book_id=book_id, counter=counter, call=call, battle_id=battle_id
         )
         await state.update_data(
-            c=counter, opponent=second_player
+            c=counter
         )
 
 
@@ -168,23 +144,27 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
 async def get_question_answer(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     c = data['c']
-    opponent_id = data['opponent']
     answer = call.data.split(":")[1]
     book_id = call.data.split(":")[2]
+    battle_id = call.data.split(":")[3]
     user_id = call.from_user.id
-    print(f"{opponent_id} opponent id")
-    print(f"{user_id} user id")
+
+    battle = await db.get_battle_by_id(battle_id=battle_id)
+
     if c == 10:
 
-        if answer == "a":
-            await db.add_answer(telegram_id=user_id, question_number=c, correct_answer="✅")
-        else:
-            await db.add_answer(telegram_id=user_id, question_number=c, correct_answer="❌")
+        # if answer == "a":
+        #     await db.(telegram_id=user_id, question_number=c, correct_answer="✅")
+        # else:
+        #     await db.add_answer(telegram_id=user_id, question_number=c, correct_answer="❌")
 
-        await db.update_game_over(game_over=True, telegram_id=user_id)
-
-        opponent_results = await db.select_answers_user(telegram_id=opponent_id)
+        # opponent_results = await db.select_answers_user(telegram_id=opponent_id)
         user_results = await db.select_answers_user(telegram_id=user_id)
+
+        if opponent_results:
+            await db.update_game_over(game_over=True, telegram_id=opponent_id)
+        if user_results:
+            await db.update_game_over(game_over=True, telegram_id=user_id)
 
         answer_number = str()
         answer_emoji = str()
@@ -192,14 +172,14 @@ async def get_question_answer(call: types.CallbackQuery, state: FSMContext):
 
         for number in numbers:
             answer_number += f"{number} "
-        print(f"{opponent_results} opponent results")
-        print(f"{user_results} user results")
-        if opponent_results and user_results is True:
+
+        if opponent_results['game_over'] and user_results['game_over'] is True:
 
             first_player = await db.select_answers_user(telegram_id=user_id)
             second_player = await db.select_answers_user(telegram_id=opponent_id)
             first_result = str()
             second_result = str()
+
         else:
             for result in user_results:
                 answer_emoji += f"{result['correct_answer']} "
@@ -216,7 +196,7 @@ async def get_question_answer(call: types.CallbackQuery, state: FSMContext):
     else:
         c += 1
         await generate_question(
-            book_id=book_id, counter=c, call=call
+            book_id=book_id, counter=c, call=call, battle_id=battle_id
         )
 
         await state.update_data(
