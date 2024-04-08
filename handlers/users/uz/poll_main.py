@@ -120,7 +120,7 @@ async def get_random_in_battle(call: types.CallbackQuery):
 
 
 @router.callback_query(OfferCallback.filter())
-async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback):
+async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, state: FSMContext):
     opponent_id = str(callback_data.agree_id)
     book_id = int(callback_data.book_id)
     fullname = call.from_user.full_name
@@ -135,6 +135,10 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback):
             start_text="Boshlash", user_id=str(user_id), book_id=book_id
         )
     )
+    counter = 1
+    await state.update_data(opponent=opponent_id, c=counter)
+
+    await generate_question(book_id=book_id, counter=counter, call=call)
 
 
 @router.callback_query(StartPlayingCallback.filter())
@@ -161,19 +165,16 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
 
 
 @router.callback_query(F.data.startswith("question:"))
-async def get_question(call: types.CallbackQuery, state: FSMContext):
+async def get_question_answer(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     c = data['c']
     opponent_id = data['opponent']
     answer = call.data.split(":")[1]
     book_id = call.data.split(":")[2]
     user_id = call.from_user.id
-
+    print(f"{opponent_id} opponent id")
+    print(f"{user_id} user id")
     if c == 10:
-        await call.answer(
-            text="Savollar tugadi!", show_alert=True
-        )
-        await call.message.delete()
 
         if answer == "a":
             await db.add_answer(telegram_id=user_id, question_number=c, correct_answer="✅")
@@ -182,24 +183,36 @@ async def get_question(call: types.CallbackQuery, state: FSMContext):
 
         await db.update_game_over(game_over=True, telegram_id=user_id)
 
-        opponent_result = await db.select_answers_user(telegram_id=opponent_id)
-        print(opponent_result)
-        if opponent_result:
-            if opponent_result[0]['game_over'] is False:
-                await call.message.edit_text(
-                    text="Raqibingiz hozircha o'yinni yakunlamadi! Natijalar raqibingiz o'yinni yakunlagach yuboriladi!"
-                )
-            else:
-                first_player = await db.select_answers_user(telegram_id=user_id)
-                second_player = await db.select_answers_user(telegram_id=opponent_id)
+        opponent_results = await db.select_answers_user(telegram_id=opponent_id)
+        user_results = await db.select_answers_user(telegram_id=user_id)
 
-                first_result = str()
-                second_result = str()
+        answer_number = str()
+        answer_emoji = str()
+        numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
+
+        for number in numbers:
+            answer_number += f"{number} "
+        print(f"{opponent_results} opponent results")
+        print(f"{user_results} user results")
+        if opponent_results and user_results is True:
+
+            first_player = await db.select_answers_user(telegram_id=user_id)
+            second_player = await db.select_answers_user(telegram_id=opponent_id)
+            first_result = str()
+            second_result = str()
+        else:
+            for result in user_results:
+                answer_emoji += f"{result['correct_answer']} "
+
+            await call.message.edit_text(
+                text=f"Savollar tugadi!\n\nSizning natijangiz:\n\n"
+                     f"{answer_number}\n\n{answer_emoji}\n\n"
+                     f"Raqibingiz hozircha o'yinni yakunlamadi! Yakunlagach raqibingizni ham natijalari"
+                     f"yuboriladi!"
+            )
 
         await state.clear()
 
-        results = await db.select_answers_user(telegram_id=user_id)
-        print(results)
     else:
         c += 1
         await generate_question(
