@@ -49,21 +49,24 @@ async def generate_question_second(book_id, counter, call: types.CallbackQuery, 
 
 @router.callback_query(OfferCallback.filter())
 async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, state: FSMContext):
-    opponent_id = callback_data.agree_id
-    book_id = int(callback_data.book_id)
+    first_player = callback_data.agree_id
+    book_id = callback_data.book_id
     fullname = call.from_user.full_name
-    user_id = call.from_user.id
-
-    id_ = await db.add_answer_first(first_player=opponent_id)
-    battle_id = id_[0]
-
+    second_player = call.from_user.id
     book_name = await db.select_book_by_id(id_=book_id)
-
+    id_ = await db.add_answer_first(first_player=first_player)
+    battle_id = id_[0]
+    try:
+        print("trying to")
+        await db.update_game_status_second(game_status="ONNO", second_player=second_player)
+    except Exception as err:
+        print(err)
+    print(f"Game status updated {second_player}")
     await bot.send_message(
-        chat_id=opponent_id,
+        chat_id=first_player,
         text=f"Foydalanuvchi {fullname} {book_name['table_name']} kitobi bo'yicha bellashuvga rozilik bildirdi!",
         reply_markup=play_battle_ibuttons(
-            start_text="Boshlash", user_id=str(user_id), book_id=book_id, battle_id=battle_id
+            start_text="Boshlash", user_id=second_player, book_id=book_id, battle_id=battle_id
         )
     )
     counter = 1
@@ -94,7 +97,7 @@ async def get_question_answer(call: types.CallbackQuery, state: FSMContext):
                 second_player=second_player, battle_id=battle_id, question_number=c, answer="❌"
             )
 
-        await db.update_game_over_second(game_over=True, second_player=second_player)
+        await db.update_game_status_second(game_status="OVER", second_player=second_player)
 
         answer_number = str()
         answer_emoji = str()

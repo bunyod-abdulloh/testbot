@@ -15,11 +15,11 @@ class BattleCallback(CallbackData, prefix="battle"):
 
 class OfferCallback(CallbackData, prefix="random_opponent"):
     agree_id: int
-    book_id: str
+    book_id: int
 
 
 class StartPlayingCallback(CallbackData, prefix="start_playing"):
-    user_id: str
+    user_id: int
     book_id: int
     battle_id: int
 
@@ -84,7 +84,7 @@ def battle_ibuttons(random_opponent: str, offer_opponent: str, playing_alone: st
     return markup
 
 
-def to_offer_ibuttons(agree_text: str, agree_id: int, refusal_text: str, book_id: str):
+def to_offer_ibuttons(agree_text: str, agree_id: int, refusal_text: str, book_id: int):
 
     callback_factory = OfferCallback(agree_id=agree_id, book_id=book_id)
 
@@ -101,7 +101,7 @@ def to_offer_ibuttons(agree_text: str, agree_id: int, refusal_text: str, book_id
     return markup
 
 
-def play_battle_ibuttons(start_text: str, user_id: str, book_id: int, battle_id: int):
+def play_battle_ibuttons(start_text: str, user_id: int, book_id: int, battle_id: int):
     callback_factory = StartPlayingCallback(user_id=user_id, book_id=book_id, battle_id=battle_id)
     markup = InlineKeyboardMarkup(
         inline_keyboard=[

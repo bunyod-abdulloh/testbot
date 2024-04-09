@@ -157,7 +157,7 @@ class Database:
             battle_id INT NULL,
             question_number INT NULL,
             answer TEXT DEFAULT '❌',
-            game_over BOOLEAN NULL DEFAULT FALSE                         
+            game_status TEXT DEFAULT 'OFF'                         
         );
         """
         await self.execute(sql, execute=True)
@@ -183,8 +183,8 @@ class Database:
         sql = f"UPDATE temporary SET battle_id='{battle_id}' WHERE first_player='{first_player}'"
         return await self.execute(sql, execute=True)
 
-    async def update_game_over_second(self, game_over, second_player):
-        sql = f"UPDATE temporary SET game_over='{game_over}' WHERE second_player='{second_player}'"
+    async def update_game_status_second(self, game_status, second_player):
+        sql = f"UPDATE temporary SET game_status='{game_status}' WHERE second_player='{second_player}'"
         return await self.execute(sql, execute=True)
 
     async def get_battle_by_id(self, battle_id):
