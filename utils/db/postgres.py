@@ -166,29 +166,39 @@ class Database:
         sql = f"INSERT INTO temporary (first_player) VALUES($1) returning id"
         return await self.execute(sql, first_player, fetchrow=True)
 
-    async def add_answer_second(self, second_player, battle_id, question_number, answer):
-        sql = (f"INSERT INTO temporary (second_player, battle_id, question_number, answer)"
-               f" VALUES($1, $2, $3, $4)")
-        return await self.execute(sql, second_player, battle_id, question_number, answer, fetchrow=True)
+    async def add_answer_first_(self, first_player, battle_id, question_number, answer, game_status):
+        sql = (f"INSERT INTO temporary (first_player, battle_id, question_number, answer, game_status) "
+               f"VALUES($1, $2, $3, $4, $5)")
+        return await self.execute(
+            sql, first_player, battle_id, question_number, answer, game_status, fetchrow=True
+        )
+
+    async def add_answer_second(self, second_player, battle_id, question_number, answer, game_status):
+        sql = (f"INSERT INTO temporary (second_player, battle_id, question_number, answer, game_status) "
+               f"VALUES($1, $2, $3, $4, $5)")
+        return await self.execute(
+            sql, second_player, battle_id, question_number, answer, game_status, fetchrow=True
+        )
 
     async def select_first_player(self, first_player):
-        sql = f"SELECT * FROM temporary WHERE first_player='{first_player}' ORDER BY question_number"
+        sql = f"SELECT answer FROM temporary WHERE first_player='{first_player}' ORDER BY question_number"
         return await self.execute(sql, fetch=True)
 
     async def select_second_player(self, second_player):
-        sql = f"SELECT * FROM temporary WHERE second_player='{second_player}' ORDER BY question_number"
+        sql = f"SELECT answer FROM temporary WHERE second_player='{second_player}' ORDER BY question_number"
         return await self.execute(sql, fetch=True)
 
-    async def update_first_player(self, battle_id, first_player):
-        sql = f"UPDATE temporary SET battle_id='{battle_id}' WHERE first_player='{first_player}'"
+    async def update_all_game_status(self, game_status, column_name, column_value):
+        sql = f"UPDATE temporary SET game_status='{game_status}' WHERE {column_name}='{column_value}'"
         return await self.execute(sql, execute=True)
 
-    async def update_game_status_second(self, game_status, second_player):
-        sql = f"UPDATE temporary SET game_status='{game_status}' WHERE second_player='{second_player}'"
-        return await self.execute(sql, execute=True)
+    async def get_battle_first(self, battle_id):
+        sql = f"SELECT DISTINCT first_player FROM temporary WHERE battle_id='{battle_id}' AND first_player IS NOT NULL"
+        return await self.execute(sql, fetch=True)
 
-    async def get_battle_by_id(self, battle_id):
-        sql = f"SELECT DISTINCT * FROM temporary WHERE battle_id='{battle_id}'"
+    async def get_battle_second(self, battle_id):
+        sql = (f"SELECT DISTINCT second_player FROM temporary WHERE battle_id='{battle_id}' "
+               f"AND second_player IS NOT NULL")
         return await self.execute(sql, fetch=True)
 
     async def delete_answers_user(self, telegram_id):
