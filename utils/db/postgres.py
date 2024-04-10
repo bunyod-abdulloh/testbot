@@ -181,11 +181,13 @@ class Database:
         )
 
     async def select_first_player(self, first_player):
-        sql = f"SELECT answer FROM temporary WHERE first_player='{first_player}' ORDER BY question_number"
+        sql = (f"SELECT answer FROM temporary WHERE first_player='{first_player}' AND question_number IS NOT NULL "
+               f"ORDER BY question_number")
         return await self.execute(sql, fetch=True)
 
     async def select_second_player(self, second_player):
-        sql = f"SELECT answer FROM temporary WHERE second_player='{second_player}' ORDER BY question_number"
+        sql = (f"SELECT answer FROM temporary WHERE second_player='{second_player}' AND question_number IS NOT NULL "
+               f"ORDER BY question_number")
         return await self.execute(sql, fetch=True)
 
     async def update_all_game_status(self, game_status, column_name, column_value):
@@ -193,12 +195,11 @@ class Database:
         return await self.execute(sql, execute=True)
 
     async def get_battle_first(self, battle_id):
-        sql = f"SELECT DISTINCT first_player FROM temporary WHERE battle_id='{battle_id}' AND first_player IS NOT NULL"
+        sql = f"SELECT * FROM temporary WHERE battle_id='{battle_id}' AND first_player IS NOT NULL"
         return await self.execute(sql, fetch=True)
 
     async def get_battle_second(self, battle_id):
-        sql = (f"SELECT DISTINCT second_player FROM temporary WHERE battle_id='{battle_id}' "
-               f"AND second_player IS NOT NULL")
+        sql = f"SELECT * FROM temporary WHERE battle_id='{battle_id}' AND second_player IS NOT NULL"
         return await self.execute(sql, fetch=True)
 
     async def delete_answers_user(self, telegram_id):

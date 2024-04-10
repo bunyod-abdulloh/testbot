@@ -47,7 +47,7 @@ async def generate_question_second(book_id, counter, call: types.CallbackQuery, 
     )
 
 
-def send_result(results):
+def send_result(results, first_text=None, second_text=None, first_player=False, second_player=False):
     answer_number = str()
     answer_emoji = str()
     numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
@@ -58,9 +58,12 @@ def send_result(results):
     for result in results:
         answer_emoji += f"{result['answer']} "
 
-    send_message = f"Savollar tugadi!\n\nSizning natijangiz:\n\n{answer_number}\n\n{answer_emoji}\n\n"
-
-    return send_message
+    if first_player:
+        first_send = f"{first_text}:\n\n{answer_number}\n\n{answer_emoji}\n\n"
+        return first_send
+    if second_player:
+        second_send = f"{second_text}:\n\n{answer_number}\n\n{answer_emoji}\n\n"
+        return second_send
 
 
 @router.callback_query(OfferCallback.filter())
@@ -98,36 +101,57 @@ async def get_question_answer_a(call: types.CallbackQuery, state: FSMContext):
     c = data['c_two']
     book_id = call.data.split(":")[2]
     battle_id = int(call.data.split(":")[3])
-    second_player = call.from_user.id
+    second_player_id = call.from_user.id
 
     if c == 10:
         await db.add_answer_second(
-            second_player=second_player, battle_id=battle_id, question_number=c, answer="✅", game_status="OVER"
+            second_player=second_player_id, battle_id=battle_id, question_number=c, answer="✅", game_status="OVER"
         )
-
-        second_results = await db.select_second_player(second_player=second_player)
-
+        await db.update_all_game_status(
+            game_status="OVER", column_name="second_player", column_value=second_player_id
+        )
         first_battler = await db.get_battle_first(
             battle_id=battle_id
         )
-        second_message = send_result(
-            results=second_results
+        second_results = await db.select_second_player(
+            second_player=second_player_id
+        )
+        second_send = send_result(
+            results=second_results, first_text="Sizning natijangiz", first_player=True
+        )
+        bot_send_ = send_result(
+            results=second_results, second_text="Raqibingiz natijasi", second_player=True
         )
         if not first_battler:
             await call.message.edit_text(
-                text=f"{second_message}"
+                text=f"{second_send}"
                      f"Raqibingiz hali o'yinni boshlamadi! O'yinni boshlaganidan so'ng raqibingiz natijalari ham "
                      f"yuboriladi!"
             )
         else:
-            print(first_battler)
-            if first_battler['game_status'] == "ON":
+            first_player_id = first_battler[0]['first_player']
+            first_results = await db.select_first_player(
+                first_player=first_player_id
+            )
+            first_send = send_result(
+                results=first_results, second_text="Raqibingiz natijasi", second_player=True
+            )
+            bot_send = send_result(
+                results=first_results, first_text="Sizning natijangiz", first_player=True
+            )
+            if first_battler[0]['game_status'] == "ON":
                 await call.message.edit_text(
-                    text=f"{second_message}"
+                    text=f"{second_send}"
                          f"Raqibingiz hali o'yinni tugatmadi! Tugatganidan so'ng raqibingiz natijalari ham yuboriladi!"
                 )
             else:
-                print("saom")
+                await call.message.edit_text(
+                    text=f"{second_send}\n{first_send}"
+                )
+                await bot.send_message(
+                    chat_id=first_player_id,
+                    text=f"{bot_send}\n{bot_send_}"
+                )
         await state.clear()
     else:
         c += 1
@@ -138,7 +162,7 @@ async def get_question_answer_a(call: types.CallbackQuery, state: FSMContext):
             c_two=c
         )
         await db.add_answer_second(
-            second_player=second_player, battle_id=battle_id, question_number=c - 1, answer="✅", game_status="ON"
+            second_player=second_player_id, battle_id=battle_id, question_number=c - 1, answer="✅", game_status="ON"
         )
 
 
