@@ -55,51 +55,80 @@ async def get_random_in_battle(call: types.CallbackQuery):
     book_name_ = await db.select_book_by_id(id_=book_id)
     book_name = book_name_['table_name']
     user_id = call.from_user.id
-
     full_name = call.from_user.full_name
 
-    numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
-
     random_user = await db.select_user_random()
-
-    markup = to_offer_ibuttons(
-        agree_text="Qabul qilish", agree_id=user_id, refusal_text="Rad qilish", book_id=book_id
-    )
-
-    if random_user['telegram_id'] == user_id:
-        other_random = await db.select_user_random()
-
-        while other_random['telegram_id'] == random_user['telegram_id']:
-            other_random = await db.select_user_random()
-
-        await bot.send_message(
-            chat_id=other_random['telegram_id'],
-            text=f"Foydalanuvchi {full_name} Sizni {book_name} kitobi bo'yicha bellashuvga taklif qilmoqda!",
-            reply_markup=markup
+    count_users = await db.count_users()
+    print(random_user)
+    if count_users == 1:
+        await call.answer(
+            text="Hozircha raqiblar topilmadi! Botga yangi foydalanuvchilar taklif qiling va birgalikda bellashuvni "
+                 "davom ettiring!", show_alert=True
         )
+        await call.message.delete()
     else:
-        await bot.send_message(
-            chat_id=random_user['telegram_id'],
-            text=f"Foydalanuvchi {full_name} Sizni {book_name} kitobi bo'yicha bellashuvga taklif qilmoqda!",
-            reply_markup=markup
-        )
-    await call.answer(
-        text="Raqibingizga bellashuv taklifi yuborildi!"
-    )
-    for n in numbers:
-        await call.message.edit_text(
-            text=f"{n}"
-        )
-        await asyncio.sleep(1)
-    await call.message.edit_text(
-        text="Raqibingizdan javob kelmasa qayta <b>Tasodifiy raqib bilan</b> tugmasini bosing!"
-    )
+        if random_user is None:
+            await call.answer(
+                text="Bellashish uchun raqib topilmadi! Barcha foydalanuvchilar band! Bellashish uchun botga yangi "
+                     "foydalanuvchilar taklif qilishingiz yoki foydalanuvchilar bellashuvlarni yakunlashini kutishingiz"
+                     " mumkin!", show_alert=True
+            )
+            await call.message.delete()
+        else:
+            markup = to_offer_ibuttons(
+                agree_text="Qabul qilish", agree_id=user_id, refusal_text="Rad qilish", book_id=book_id
+            )
+            if random_user['telegram_id'] == user_id:
+                other_random = await db.select_user_random()
+                c = 0
+                while other_random['telegram_id'] == random_user['telegram_id']:
+                    other_random = await db.select_user_random()
+                    c += 1
+
+                    if c == 4:
+                        await call.answer(
+                            text="Bellashish uchun raqib topilmadi! Barcha foydalanuvchilar band! Bellashish uchun botga yangi "
+                                 "foydalanuvchilar taklif qilishingiz yoki foydalanuvchilar bellashuvlarni yakunlashini kutishingiz"
+                                 " mumkin!", show_alert=True
+                        )
+                        await call.message.delete()
+                        break
+
+                await bot.send_message(
+                    chat_id=other_random['telegram_id'],
+                    text=f"Foydalanuvchi {full_name} Sizni {book_name} kitobi bo'yicha bellashuvga taklif qilmoqda!",
+                    reply_markup=markup
+                )
+                await call.answer(
+                    text="Raqibingizga bellashuv taklifi yuborildi!"
+                )
+                await call.message.edit_text(
+                    text="Raqibingizdan javob kelmasa qayta <b>Tasodifiy raqib bilan</b> tugmasini bosing!"
+                )
+            else:
+                await bot.send_message(
+                    chat_id=random_user['telegram_id'],
+                    text=f"Foydalanuvchi {full_name} Sizni {book_name} kitobi bo'yicha bellashuvga taklif qilmoqda!",
+                    reply_markup=markup
+                )
+
+                await call.answer(
+                    text="Raqibingizga bellashuv taklifi yuborildi!"
+                )
+                await call.message.edit_text(
+                    text="Raqibingizdan javob kelmasa qayta <b>Tasodifiy raqib bilan</b> tugmasini bosing!"
+                )
 
 
 @router.callback_query(StartPlayingCallback.filter())
 async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCallback, state: FSMContext):
     book_id = callback_data.book_id
     battle_id = callback_data.battle_id
+    first_player_id = call.from_user.id
+
+    await db.update_gaming_status(
+        status=True, telegram_id=first_player_id
+    )
 
     c_one = 1
     await generate_question(

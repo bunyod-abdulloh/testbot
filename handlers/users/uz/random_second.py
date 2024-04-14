@@ -68,19 +68,21 @@ def send_result(results, first_text=None, second_text=None, first_player=False, 
 
 @router.callback_query(OfferCallback.filter())
 async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, state: FSMContext):
-    first_player = callback_data.agree_id
+    first_player_id = callback_data.agree_id
+    second_player_id = call.from_user.id
     book_id = callback_data.book_id
     fullname = call.from_user.full_name
+
     book_name = await db.select_book_by_id(
         id_=book_id
     )
     id_ = await db.add_answer_first(
-        first_player=first_player
+        first_player=first_player_id
     )
     battle_id = id_[0]
 
     await bot.send_message(
-        chat_id=first_player,
+        chat_id=first_player_id,
         text=f"Foydalanuvchi {fullname} {book_name['table_name']} kitobi bo'yicha bellashuvga rozilik bildirdi!",
         reply_markup=play_battle_ibuttons(
             start_text="Boshlash", book_id=book_id, battle_id=battle_id
@@ -89,6 +91,10 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
     c_two = 1
     await state.update_data(
         c_two=c_two
+    )
+
+    await db.update_gaming_status(
+        status=True, telegram_id=second_player_id
     )
     await generate_question_second(
         book_id=book_id, counter=c_two, call=call, battle_id=battle_id

@@ -35,8 +35,6 @@ async def get_book_name(call: types.CallbackQuery):
     )
 
 
-
-
 @router.callback_query(F.data == "uz_back")
 async def uz_back(call: types.CallbackQuery):
     await call.message.delete()
