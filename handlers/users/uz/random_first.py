@@ -62,12 +62,10 @@ async def get_random_in_battle(call: types.CallbackQuery):
     )
 
     if random_user is None:
-        await call.answer(
-            text="Bellashish uchun raqib topilmadi! Barcha foydalanuvchilar band! Bellashish uchun botga yangi "
-                 "foydalanuvchilar taklif qilishingiz yoki foydalanuvchilar bellashuvlarni yakunlashini "
-                 "kutishingiz mumkin!", show_alert=True
+        await call.message.edit_text(
+            text="Bellashish uchun raqib topilmadi! <b>Raqib taklif qilish</b>ingiz yoki <b>Yakka o'yin</b> "
+                 "o'ynashingiz mumkin!"
         )
-        await call.message.delete()
     else:
         markup = to_offer_ibuttons(
             agree_text="Qabul qilish", agree_id=user_id, refusal_text="Rad qilish", book_id=book_id
@@ -91,16 +89,18 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
     battle_id = callback_data.battle_id
     first_player_id = call.from_user.id
 
-    await db.update_gaming_status(
-        status=True, telegram_id=first_player_id
-    )
-
     c_one = 1
     await generate_question(
         book_id=book_id, counter=c_one, call=call, battle_id=battle_id
     )
     await state.update_data(
         c_one=c_one
+    )
+    await db.add_gamer(
+        telegram_id=first_player_id, book_id=book_id
+    )
+    await db.on_status_users(
+        telegram_id=first_player_id
     )
 
 

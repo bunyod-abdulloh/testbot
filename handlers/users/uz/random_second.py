@@ -75,6 +75,9 @@ async def question_answer_function(call: types.CallbackQuery, answer: str, state
         await db.add_answer_(
             telegram_id=player_id, battle_id=battle_id, question_number=c, answer=answer, game_status="OVER"
         )
+        second_answers = await db.count_answers(
+            telegram_id=player_id, answer=answer
+        )
         await db.update_all_game_status(
             game_status="OVER", telegram_id=player_id, battle_id=battle_id
         )
@@ -123,14 +126,14 @@ async def question_answer_function(call: types.CallbackQuery, answer: str, state
                 first_answers = await db.count_answers(
                     telegram_id=player_id_, answer=answer
                 )
-                second_answers = await db.count_answers(
-                    telegram_id=player_id, answer=answer
+                await db.update_results(
+                    results=first_answers, book_id=book_id, telegram_id=player_id_
                 )
-                await db.stop_game(
-                    result=first_answers, telegram_id=player_id_
+                await db.update_results(
+                    results=second_answers, book_id=book_id, telegram_id=player_id
                 )
-                await db.stop_game(
-                    result=second_answers, telegram_id=player_id
+                await db.clean_temporary_table(
+                    battle_id=battle_id
                 )
         await state.clear()
     else:
@@ -156,8 +159,9 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
     book_name = await db.select_book_by_id(
         id_=book_id
     )
-    id_ = await db.add_answer_first(
-        first_player=first_player_id
+    # Temporary jadvaliga user ma'lumotlarini qo'shib battle idsini olish
+    id_ = await db.add_answer(
+        telegram_id=first_player_id
     )
     battle_id = id_[0]
 
@@ -172,12 +176,16 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
     await state.update_data(
         c_two=c_two
     )
-
-    await db.update_gaming_status(
-        status=True, telegram_id=second_player_id
+    # Users jadvalida userga game_on yoqish
+    await db.on_status_users(
+        telegram_id=second_player_id
     )
     await generate_question_second(
         book_id=book_id, counter=c_two, call=call, battle_id=battle_id
+    )
+    # Results jadvaliga userni qo'shish
+    await db.add_gamer(
+        telegram_id=second_player_id, book_id=book_id
     )
 
 
