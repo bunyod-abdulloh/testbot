@@ -5,7 +5,7 @@ from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from handlers.users.uz.random_second import send_result
+from handlers.users.uz.random_second import send_result, question_answer_function
 from keyboards.inline.buttons import to_offer_ibuttons, StartPlayingCallback
 from loader import db, bot
 
@@ -108,87 +108,9 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
 async def get_question_first_a(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     c = data['c_one']
-    book_id = call.data.split(":")[2]
-    battle_id = int(call.data.split(":")[3])
-    first_player_id = call.from_user.id
-
-    if c == 10:
-        await db.add_answer_(
-            telegram_id=first_player_id, battle_id=battle_id, question_number=c, answer="✅", game_status="OVER"
-        )
-        await db.update_all_game_status(
-            game_status="OVER", telegram_id=first_player_id, battle_id=battle_id
-        )
-        second_battler = await db.get_battle(
-            battle_id=battle_id, telegram_id=first_player_id
-        )
-        first_results = await db.select_player(
-            telegram_id=first_player_id
-        )
-        first_send = send_result(
-            results=first_results, second_text="Sizning natijangiz", second_player=True
-        )
-        bot_opponent_result = send_result(
-            results=first_results, first_text="Raqibingiz natijasi", first_player=True
-        )
-
-        if not second_battler:
-            await call.message.edit_text(
-                text=f"{first_send}"
-                     f"Raqibingiz hali o'yinni boshlamadi! O'yinni boshlaganidan so'ng raqibingiz natijalari ham "
-                     f"yuboriladi!"
-            )
-        else:
-            second_player_id = second_battler[0]['telegram_id']
-            second_results = await db.select_player(
-                telegram_id=second_player_id
-            )
-            second_send = send_result(
-                results=second_results, first_text="Raqibingiz natijasi", first_player=True
-            )
-            bot_your_result = send_result(
-                results=second_results, second_text="Sizning natijangiz", second_player=True
-            )
-            if second_battler[0]['game_status'] == "ON":
-                await call.message.edit_text(
-                    text=f"{first_send}"
-                         f"Raqibingiz hali o'yinni tugatmadi! Tugatganidan so'ng raqibingiz natijalari ham yuboriladi!"
-                )
-            else:
-                await call.message.edit_text(
-                    text=f"{first_send}\n{second_send}"
-                )
-                await bot.send_message(
-                    chat_id=second_player_id,
-                    text=f"{bot_your_result}\n{bot_opponent_result}"
-                )
-                first_answers = await db.count_answers(
-                    telegram_id=first_player_id, answer="✅"
-                )
-                second_answers = await db.count_answers(
-                    telegram_id=second_player_id, answer="✅"
-                )
-                await db.stop_game(
-                    result=first_answers, telegram_id=first_player_id
-                )
-                await db.stop_game(
-                    result=second_answers, telegram_id=second_player_id
-                )
-                # await db.clean_temporary_table(
-                #     battle_id=battle_id
-                # )
-        await state.clear()
-    else:
-        c += 1
-        await generate_question(
-            book_id=book_id, counter=c, call=call, battle_id=battle_id
-        )
-        await state.update_data(
-            c_one=c
-        )
-        await db.add_answer_(
-            telegram_id=first_player_id, battle_id=battle_id, question_number=c - 1, answer="✅", game_status="ON"
-        )
+    await question_answer_function(
+        call=call, answer="✅", state=state, c=c
+    )
 
 
 first_answer_filter = (F.data.startswith("question:b") | F.data.startswith("question:c") |
@@ -199,75 +121,6 @@ first_answer_filter = (F.data.startswith("question:b") | F.data.startswith("ques
 async def get_question_first(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     c = data['c_one']
-    book_id = call.data.split(":")[2]
-    battle_id = int(call.data.split(":")[3])
-    first_player_id = call.from_user.id
-
-    if c == 10:
-        await db.add_answer_first_(
-            first_player=first_player_id, battle_id=battle_id, question_number=c, answer="✅", game_status="OVER"
-        )
-        second_battler = await db.get_battle_second(
-            battle_id=battle_id
-        )
-        first_results = await db.select_first_player(
-            first_player=first_player_id
-        )
-        first_send = send_result(
-            results=first_results, second_text="Sizning natijangiz", second_player=True
-        )
-        bot_opponent_result = send_result(
-            results=first_results, first_text="Raqibingiz natijasi", first_player=True
-        )
-
-        if not second_battler:
-            await call.message.edit_text(
-                text=f"{first_send}"
-                     f"Raqibingiz hali o'yinni boshlamadi! O'yinni boshlaganidan so'ng raqibingiz natijalari ham "
-                     f"yuboriladi!"
-            )
-        else:
-            second_player_id = second_battler[0]['second_player']
-            second_results = await db.select_second_player(
-                second_player=second_player_id
-            )
-            second_send = send_result(
-                results=second_results, first_text="Raqibingiz natijasi", first_player=True
-            )
-            bot_your_result = send_result(
-                results=second_results, second_text="Sizning natijangiz", second_player=True
-            )
-            if second_battler[0]['game_status'] == "ON":
-                await call.message.edit_text(
-                    text=f"{first_send}"
-                         f"Raqibingiz hali o'yinni tugatmadi! Tugatganidan so'ng raqibingiz natijalari ham yuboriladi!"
-                )
-            else:
-                await call.message.edit_text(
-                    text=f"{first_send}\n{second_send}"
-                )
-                await bot.send_message(
-                    chat_id=second_player_id,
-                    text=f"{bot_your_result}\n{bot_opponent_result}"
-                )
-                await db.stop_game(
-                    telegram_id=first_player_id
-                )
-                await db.stop_game(
-                    telegram_id=second_player_id
-                )
-                # await db.clean_temporary_table(
-                #     battle_id=battle_id
-                # )
-        await state.clear()
-    else:
-        c += 1
-        await generate_question(
-            book_id=book_id, counter=c, call=call, battle_id=battle_id
-        )
-        await state.update_data(
-            c_one=c
-        )
-        await db.add_answer_first_(
-            first_player=first_player_id, battle_id=battle_id, question_number=c - 1, answer="❌", game_status="ON"
-        )
+    await question_answer_function(
+        call=call, answer="❌", state=state, c=c
+    )
