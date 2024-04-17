@@ -1,3 +1,4 @@
+import asyncio
 import random
 
 from aiogram import types, Router, F
@@ -10,7 +11,20 @@ from loader import db, bot
 router = Router()
 
 
+async def countdown_timer(seconds, call: types.CallbackQuery):
+    while seconds > 0:
+        await call.message.edit_text(
+            text=f"Qolgan vaqt: 00:{seconds}"
+        )
+        await asyncio.sleep(1)
+        seconds -= 1
+    await call.message.edit_text(
+        text="O'yin uchun ajratilgan vaqt tugadi!"
+    )
+
+
 async def generate_question_second(book_id, counter, call: types.CallbackQuery, battle_id):
+
     questions = await db.select_all_questions(table_name=f"table_{book_id}")
 
     letters = ["A", "B", "C", "D"]
@@ -45,6 +59,25 @@ async def generate_question_second(book_id, counter, call: types.CallbackQuery, 
              f"{questions_text}",
         reply_markup=builder.as_markup()
     )
+
+    # for n in range(59):
+    #     await asyncio.sleep(1)
+    #     await call.message.edit_text(
+    #         text=f"00:{n}"
+    #     )
+    # await call.message.answer(
+    #     text="O'yin boshlandi!"
+    # )
+    # seconds = 60
+    # while seconds > 0:
+    #     await call.message.edit_text(
+    #         text=f"Qolgan vaqt: 00:{seconds}"
+    #     )
+    #     await asyncio.sleep(1)
+    #     seconds -= 1
+    # await call.message.edit_text(
+    #     text="O'yin uchun ajratilgan vaqt tugadi!"
+    # )
 
 
 def send_result(results, first_text=None, second_text=None, first_player=False, second_player=False):
@@ -99,6 +132,9 @@ async def question_answer_function(call: types.CallbackQuery, answer: str, state
                      f"Raqibingiz hali o'yinni boshlamadi! O'yinni boshlaganidan so'ng raqibingiz natijalari ham "
                      f"yuboriladi!"
             )
+            await db.edit_status_users(
+                game_on=False, telegram_id=player_id
+            )
         else:
             player_id_ = first_battler[0]['telegram_id']
             first_results = await db.select_player(
@@ -114,6 +150,9 @@ async def question_answer_function(call: types.CallbackQuery, answer: str, state
                 await call.message.edit_text(
                     text=f"{second_send}"
                          f"Raqibingiz hali o'yinni tugatmadi! Tugatganidan so'ng raqibingiz natijalari ham yuboriladi!"
+                )
+                await db.edit_status_users(
+                    game_on=False, telegram_id=player_id
                 )
             else:
                 await call.message.edit_text(
@@ -132,8 +171,16 @@ async def question_answer_function(call: types.CallbackQuery, answer: str, state
                 await db.update_results(
                     results=second_answers, book_id=book_id, telegram_id=player_id
                 )
+                # Temporary jadvalni tozalash
                 await db.clean_temporary_table(
                     battle_id=battle_id
+                )
+                # Users jadvalidan o'yinchilar game on ustunini FALSE holatiga keltirish
+                await db.edit_status_users(
+                    game_on=False, telegram_id=player_id
+                )
+                await db.edit_status_users(
+                    game_on=False, telegram_id=player_id_
                 )
         await state.clear()
     else:
@@ -147,6 +194,7 @@ async def question_answer_function(call: types.CallbackQuery, answer: str, state
         await db.add_answer_(
             telegram_id=player_id, battle_id=battle_id, question_number=c - 1, answer=answer, game_status="ON"
         )
+
 
 
 @router.callback_query(OfferCallback.filter())
@@ -177,8 +225,8 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
         c_two=c_two
     )
     # Users jadvalida userga game_on yoqish
-    await db.on_status_users(
-        telegram_id=second_player_id
+    await db.edit_status_users(
+        game_on=True, telegram_id=second_player_id
     )
     await generate_question_second(
         book_id=book_id, counter=c_two, call=call, battle_id=battle_id

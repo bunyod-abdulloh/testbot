@@ -5,7 +5,7 @@ from filters import ChatPrivateFilter
 
 def setup_routers() -> Router:
     from .users import admin, help
-    from handlers.users.uz import start, poll_main, poll_one, random_first, random_second
+    from handlers.users.uz import start, battle_main, random_first, random_second
     from .errors import error_handler
 
     router = Router()
@@ -16,8 +16,7 @@ def setup_routers() -> Router:
     router.include_routers(
         admin.router,
         start.router,
-        poll_main.router,
-        poll_one.router,
+        battle_main.router,
         random_first.router,
         random_second.router,
         help.router,

@@ -32,7 +32,7 @@ async def do_start(message: types.Message, state: FSMContext):
     except Exception as error:
         logger.info(error)
 
-    await message.answer(text=f"Assalomu alaykum! Botdan foydalanish uchun guruhimizga a'zo bo'ling!",
+    await message.answer(text="Assalomu alaykum! Botdan foydalanish uchun guruhimizga a'zo bo'ling!",
                          reply_markup=uz_check_buttons)
 
 

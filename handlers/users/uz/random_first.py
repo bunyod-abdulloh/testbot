@@ -90,22 +90,26 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
     first_player_id = call.from_user.id
 
     c_one = 1
+
     await generate_question(
         book_id=book_id, counter=c_one, call=call, battle_id=battle_id
     )
     await state.update_data(
         c_one=c_one
     )
+    # Results jadvaliga userni qo'shish
     await db.add_gamer(
         telegram_id=first_player_id, book_id=book_id
     )
-    await db.on_status_users(
-        telegram_id=first_player_id
+    # Users jadvalida userga game_on yoqish
+    await db.edit_status_users(
+        game_on=True, telegram_id=first_player_id
     )
 
 
 @router.callback_query(F.data.startswith("question:a"))
 async def get_question_first_a(call: types.CallbackQuery, state: FSMContext):
+
     data = await state.get_data()
     c = data['c_one']
     await question_answer_function(

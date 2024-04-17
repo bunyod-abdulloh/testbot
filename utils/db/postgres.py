@@ -72,8 +72,8 @@ class Database:
                f"ORDER BY RANDOM() LIMIT 1")
         return await self.execute(sql, fetchrow=True)
 
-    async def on_status_users(self, telegram_id):
-        sql = f"UPDATE Users SET game_on=True WHERE telegram_id='{telegram_id}'"
+    async def edit_status_users(self, game_on, telegram_id):
+        sql = f"UPDATE Users SET game_on='{game_on}' WHERE telegram_id='{telegram_id}'"
         return await self.execute(sql, execute=True)
 
     async def stop_game_users(self, telegram_id):
@@ -112,11 +112,11 @@ class Database:
         return await self.execute(sql, execute=True)
 
     async def delete_user_results(self, telegram_id):
-        await self.execute(f"DELETE FROM Results WHERE telegram_id='{telegram_id}'", execute=True)
+        await self.execute(f"DELETE FROM Results WHERE telegram_id='{telegram_id}' "
+                           f"AND result=0", execute=True)
 
     async def drop_table_results(self):
         await self.execute("DROP TABLE Results", execute=True)
-
 
     # ===================== TABLE | TABLES =================
     async def create_table_tables(self):

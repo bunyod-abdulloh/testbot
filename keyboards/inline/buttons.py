@@ -1,7 +1,7 @@
 import random
 
 from aiogram.filters.callback_data import CallbackData
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, SwitchInlineQueryChosenChat, CallbackGame
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from loader import db
@@ -70,7 +70,8 @@ def battle_ibuttons(random_opponent: str, offer_opponent: str, playing_alone: st
                 InlineKeyboardButton(text=f"😎 {random_opponent}", callback_data=f"book_id:{book_id}")
             ],
             [
-                InlineKeyboardButton(text=f"😊 {offer_opponent}", callback_data="da")
+                InlineKeyboardButton(text=f"😊 {offer_opponent}",
+                                     callback_data="olma")
             ],
             [
                 InlineKeyboardButton(text=f"🥷 {playing_alone}", callback_data=f"alone:{alone_callback}")
