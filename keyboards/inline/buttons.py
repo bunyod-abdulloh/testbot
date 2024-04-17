@@ -61,8 +61,8 @@ async def battle_main_ibuttons(back_text: str, back_callback: str):
     return builder.as_markup()
 
 
-def battle_ibuttons(random_opponent: str, offer_opponent: str, playing_alone: str, alone_callback: str,
-                    back: str, back_callback: str, book_id: str):
+def battle_ibuttons(random_opponent: str, offer_opponent: str, playing_alone: str, back: str, back_callback: str,
+                    book_id: str):
 
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -70,11 +70,10 @@ def battle_ibuttons(random_opponent: str, offer_opponent: str, playing_alone: st
                 InlineKeyboardButton(text=f"😎 {random_opponent}", callback_data=f"book_id:{book_id}")
             ],
             [
-                InlineKeyboardButton(text=f"😊 {offer_opponent}",
-                                     callback_data="olma")
+                InlineKeyboardButton(text=f"😊 {offer_opponent}", callback_data=f"with_friend:{book_id}")
             ],
             [
-                InlineKeyboardButton(text=f"🥷 {playing_alone}", callback_data=f"alone:{alone_callback}")
+                InlineKeyboardButton(text=f"🥷 {playing_alone}", callback_data=f"alone:{book_id}")
             ],
             [
                 InlineKeyboardButton(text=f"⬅️ {back}", callback_data=f"{back_callback}")
@@ -113,20 +112,15 @@ def play_battle_ibuttons(start_text: str, book_id: int, battle_id: int):
     return markup
 
 
-def questions_ibuttons():
-    questions = ["a_correct", "b", "c", "d"]
-    random.shuffle(questions)
-    letters = ["A", "B", "C", "D"]
-
-    questions_ = zip(letters, questions)
-
-    builder = InlineKeyboardBuilder()
-    for letter, question in questions_:
-        builder.add(
-            InlineKeyboardButton(
-                text=f"{letter}", callback_data=f"question:{question}"
-            )
-        )
-    builder.adjust(2, 2)
-    return builder.as_markup()
-
+def bot_offer_ibuttons(offer_text: str, full_name: str):
+    markup = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=f"🤖 {offer_text}", switch_inline_query=f"\n\nFoydalanuvchi {full_name} Sizga botimizdan "
+                                                                f"foydalanishni taklif qilmoqda!"
+                )
+            ]
+        ]
+    )
+    return markup

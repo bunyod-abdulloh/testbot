@@ -1,6 +1,6 @@
 from aiogram import Router, F, types
 
-# from handlers.users.uz.start import uz_start_buttons
+from handlers.users.uz.start import uz_start_buttons
 from keyboards.inline.buttons import battle_ibuttons, battle_main_ibuttons
 from loader import db
 
@@ -33,27 +33,20 @@ async def uz_battle_main(message: types.Message):
     )
 
 
-@router.message(F.user_shared)
-async def samplerr(message: types.Message):
-    opponent_id = message.user_shared.user_id
-    user_id = message.from_user.id
-
-
-
 @router.callback_query(F.data.startswith("table_"))
 async def get_book_name(call: types.CallbackQuery):
     book_id = call.data.split("_")[1]
     await call.message.edit_text(
         text="Bellashuv turini tanlang", reply_markup=battle_ibuttons(
-            random_opponent="Tasodifiy raqib bilan", offer_opponent="Raqib taklif qilish",
-            playing_alone="Yakka o'yin", alone_callback="uz_alone",
-            back="Ortga", back_callback="uz_back", book_id=book_id
+            random_opponent="Tasodifiy raqib bilan", offer_opponent="Do'stni taklif qilish",
+            playing_alone="Yakka o'yin", back="Ortga", back_callback="uz_back", book_id=book_id
         )
     )
 
-# @router.callback_query(F.data == "uz_back")
-# async def uz_back(call: types.CallbackQuery):
-#     await call.message.delete()
-#     await call.message.answer(
-#         text="Bosh sahifa", reply_markup=uz_start_buttons
-#     )
+
+@router.callback_query(F.data == "uz_back")
+async def uz_back(call: types.CallbackQuery):
+    await call.message.delete()
+    await call.message.answer(
+        text="Bosh sahifa", reply_markup=uz_start_buttons
+    )
