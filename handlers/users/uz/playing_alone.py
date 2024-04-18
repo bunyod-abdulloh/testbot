@@ -46,6 +46,17 @@ async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     )
 
 
+async def question_answer_alone(call: types.CallbackQuery, c: str, answer: str):
+    book_id = call.data.split(':')[2]
+    user_id = call.from_user.id
+
+    if c == 10:
+        # Temporary jadvaliga savollarni javoblarini qo'shish
+        await db.add_answer_(
+            telegram_id=user_id, battle_id=0, question_number=c, answer=answer, game_status="OFF"
+        )
+
+
 @router.callback_query(F.data.startswith("alone:"))
 async def alone_first(call: types.CallbackQuery, state: FSMContext):
     book_id = call.data.split(":")[1]

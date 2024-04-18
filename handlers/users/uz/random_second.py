@@ -24,7 +24,6 @@ async def countdown_timer(seconds, call: types.CallbackQuery):
 
 
 async def generate_question_second(book_id, counter, call: types.CallbackQuery, battle_id):
-
     questions = await db.select_all_questions(table_name=f"table_{book_id}")
 
     letters = ["A", "B", "C", "D"]
@@ -55,7 +54,7 @@ async def generate_question_second(book_id, counter, call: types.CallbackQuery, 
     builder.adjust(2, 2)
 
     await call.message.edit_text(
-        text=f"{counter}. {questions[0]['question']}\n\n"
+        text=f"{counter}/10. {questions[0]['question']}\n\n"
              f"{questions_text}",
         reply_markup=builder.as_markup()
     )
@@ -100,16 +99,22 @@ def send_result(results, first_text=None, second_text=None, first_player=False, 
 
 
 async def question_answer_function(call: types.CallbackQuery, answer: str, state: FSMContext, c: str):
-    book_id = call.data.split(":")[2]
+    book_id = int(call.data.split(":")[2])
     battle_id = int(call.data.split(":")[3])
     player_id = call.from_user.id
+    book_name = await db.select_book_by_id(
+        id_=book_id
+    )
 
     if c == 10:
         await db.add_answer_(
             telegram_id=player_id, battle_id=battle_id, question_number=c, answer=answer, game_status="OVER"
         )
         second_answers = await db.count_answers(
-            telegram_id=player_id, answer=answer
+            telegram_id=player_id, answer="✅"
+        )
+        second_answers_ = await db.count_answers(
+            telegram_id=player_id, answer="❌"
         )
         await db.update_all_game_status(
             game_status="OVER", telegram_id=player_id, battle_id=battle_id
@@ -120,12 +125,19 @@ async def question_answer_function(call: types.CallbackQuery, answer: str, state
         second_results = await db.select_player(
             telegram_id=player_id
         )
-        second_send = send_result(
-            results=second_results, first_text="Sizning natijangiz", first_player=True
-        )
+        # second_send = send_result(
+        #     results=second_results, first_text=first_text, first_player=True
+        # )
         bot_opponent_result = send_result(
             results=second_results, second_text="Raqibingiz natijasi", second_player=True
         )
+        first_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b>{book_name['table_name']}</i>"
+                      f"<i><b>Savollar soni:</b>10 ta</i>\n\n😊 <i><b>Sizning natijangiz:</b></i>"
+                      f"\n\n✅ <i><b>To'g'ri javob:</b>{second_answers} ta</i>"
+                      f"\n\n❌ <i><b>Noto'g'ri javob:</b>{second_answers_} ta</i>"
+                      f"\n\n⏳ <i><b>Sarflangan vaqt:</b></i>"
+                      f"\n\n📖 <i><b>Kitob bo'yicha reyting:</b></i>"
+                      f"\n\n📚 <i><b>Umumiy reyting:</b></i>")
         if not first_battler:
             await call.message.edit_text(
                 text=f"{second_send}"
@@ -144,7 +156,7 @@ async def question_answer_function(call: types.CallbackQuery, answer: str, state
                 results=first_results, second_text="Raqibingiz natijasi", second_player=True
             )
             bot_your_result = send_result(
-                results=first_results, first_text="Sizning natijangiz", first_player=True
+                results=first_results, first_text=first_text, first_player=True
             )
             if first_battler[0]['game_status'] == "ON":
                 await call.message.edit_text(
@@ -192,9 +204,8 @@ async def question_answer_function(call: types.CallbackQuery, answer: str, state
             c_two=c
         )
         await db.add_answer_(
-            telegram_id=player_id, battle_id=battle_id, question_number=c - 1, answer=answer, game_status="ON"
+            telegram_id=player_id, battle_id=battle_id, question_number=int(c) - 1, answer=answer, game_status="ON"
         )
-
 
 
 @router.callback_query(OfferCallback.filter())

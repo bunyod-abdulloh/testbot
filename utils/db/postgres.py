@@ -183,7 +183,9 @@ class Database:
             battle_id INT NULL,
             question_number INT NULL,
             answer TEXT DEFAULT '❌',
-            game_status TEXT DEFAULT 'OFF'                         
+            game_status TEXT DEFAULT 'OFF',
+            start FLOAT NULL,
+            end FLOAT NULL                         
         );
         """
         await self.execute(sql, execute=True)
