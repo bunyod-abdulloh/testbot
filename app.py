@@ -31,11 +31,11 @@ def setup_filters(dispatcher: Dispatcher) -> None:
 
 
 async def setup_aiogram(dispatcher: Dispatcher, bot: Bot) -> None:
-    logger.info("Configuring aiogram")
+    # logger.info("Configuring aiogram")
     setup_handlers(dispatcher=dispatcher)
     setup_middlewares(dispatcher=dispatcher, bot=bot)
     setup_filters(dispatcher=dispatcher)
-    logger.info("Configured aiogram")
+    # logger.info("Configured aiogram")
 
 
 async def database_connected():
@@ -54,7 +54,7 @@ async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
     from utils.set_bot_commands import set_default_commands
     from utils.notify_admins import on_startup_notify
 
-    logger.info("Database connected")
+    # logger.info("Database connected")
     await database_connected()
 
     logger.info("Starting polling")
@@ -62,6 +62,7 @@ async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
     await setup_aiogram(bot=bot, dispatcher=dispatcher)
     await on_startup_notify(bot=bot)
     await set_default_commands(bot=bot)
+    # scheduler.start()
 
 
 async def aiogram_on_shutdown_polling(dispatcher: Dispatcher, bot: Bot):

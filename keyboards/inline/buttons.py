@@ -112,13 +112,13 @@ def play_battle_ibuttons(start_text: str, book_id: int, battle_id: int):
     return markup
 
 
-def bot_offer_ibuttons(offer_text: str, full_name: str):
+def bot_offer_ibuttons(offer_text: str, full_name: str, bot_link: str):
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=f"🤖 {offer_text}", switch_inline_query=f"\n\nFoydalanuvchi {full_name} Sizga botimizdan "
-                                                                f"foydalanishni taklif qilmoqda!"
+                    text=f"🤖 {offer_text}", switch_inline_query=f"\n\nFoydalanuvchi {full_name} Sizni bellashuvga "
+                                                                f"taklif qilmoqda! Manzil: {bot_link}"
                 )
             ]
         ]

@@ -106,10 +106,32 @@ class Database:
         sql = "INSERT INTO Results (telegram_id, book_id) VALUES($1, $2)"
         return await self.execute(sql, telegram_id, book_id, fetchrow=True)
 
+    async def add_gamer_(self, telegram_id, book_id, result):
+        sql = "INSERT INTO Results (telegram_id, book_id, result) VALUES($1, $2, $3)"
+        return await self.execute(sql, telegram_id, book_id, result, fetchrow=True)
+
     async def update_results(self, results, telegram_id, book_id):
         sql = (f"UPDATE Results SET result=result + '{results}' WHERE telegram_id='{telegram_id}' AND "
                f"book_id='{book_id}'")
         return await self.execute(sql, execute=True)
+
+    async def get_rating_by_id(self, book_name):
+        sql = (f"SELECT telegram_id SUM(result) AS total_result FROM Results WHERE book_id = '{book_name}' "
+               f"GROUP BY user ORDER BY total_result DESC")
+        return await self.execute(sql, fetchrow=True)
+
+    # async def get_rating_id(self, book_id):
+    #     sql = (f"SELECT row_number() OVER (ORDER BY telegram_id) AS row_num, telegram_id, result FROM Results "
+    #            f"WHERE book_id='{book_id}'")
+    #     return await self.execute(sql, fetch=True)
+
+    async def get_rating_book(self, book_id):
+        sql = f"SELECT telegram_id, result FROM Results WHERE book_id='{book_id}' AND result!=0 ORDER BY result DESC"
+        return await self.execute(sql, fetch=True)
+
+    async def get_rating_all(self):
+        sql = f"SELECT telegram_id, result FROM Results WHERE result!=0 ORDER BY result DESC"
+        return await self.execute(sql, fetch=True)
 
     async def delete_user_results(self, telegram_id):
         await self.execute(f"DELETE FROM Results WHERE telegram_id='{telegram_id}' "
@@ -178,14 +200,12 @@ class Database:
     async def create_table_temporary_answers(self):
         sql = """
         CREATE TABLE IF NOT EXISTS temporary (
-            id SERIAL PRIMARY KEY,
-            telegram_id BIGINT NULL,            
-            battle_id INT NULL,
-            question_number INT NULL,
-            answer TEXT DEFAULT '❌',
-            game_status TEXT DEFAULT 'OFF',
-            start FLOAT NULL,
-            end FLOAT NULL                         
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NULL,            
+        battle_id INT NULL,
+        question_number INT NULL,
+        answer TEXT DEFAULT '❌',
+        game_status TEXT DEFAULT 'OFF'                                 
         );
         """
         await self.execute(sql, execute=True)
@@ -233,7 +253,8 @@ class Database:
         return await self.execute(sql, fetch=True)
 
     async def count_answers(self, telegram_id, answer):
-        sql = f"SELECT COUNT(answer) FROM Temporary WHERE telegram_id='{telegram_id}' AND answer='{answer}'"
+        sql = (f"SELECT COUNT(answer) FROM Temporary WHERE telegram_id='{telegram_id}' AND answer='{answer}' "
+               f"AND question_number IS NOT NULL")
         return await self.execute(sql, fetchval=True)
 
     async def clean_temporary_table(self, battle_id):

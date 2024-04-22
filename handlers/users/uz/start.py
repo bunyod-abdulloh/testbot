@@ -31,9 +31,12 @@ async def do_start(message: types.Message, state: FSMContext):
         await db.add_user(telegram_id=telegram_id, full_name=full_name)
     except Exception as error:
         logger.info(error)
-
-    await message.answer(text="Assalomu alaykum! Botdan foydalanish uchun guruhimizga a'zo bo'ling!",
-                         reply_markup=uz_check_buttons)
+    await message.answer(
+        text="Assalomu alaykum!",
+        reply_markup=uz_start_buttons
+    )
+    # await message.answer(text="Assalomu alaykum! Botdan foydalanish uchun guruhimizga a'zo bo'ling!",
+    #                      reply_markup=uz_check_buttons)
 
 
 @router.callback_query(F.data == "status")

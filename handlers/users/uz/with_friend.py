@@ -39,10 +39,9 @@ async def friend_shared(message: types.Message, state: FSMContext):
     opponent_id = int(message.user_shared.user_id)
     user_id = message.from_user.id
     user_fullname = message.from_user.full_name
-    get_username = await bot.get_chat(
-        chat_id=opponent_id
-    )
-    opponent_fullname = get_username.full_name
+
+    # get_username = await bot.get
+    # opponent_fullname = get_username.full_name
 
     select_opponent = await db.select_user(
         telegram_id=opponent_id
@@ -59,12 +58,13 @@ async def friend_shared(message: types.Message, state: FSMContext):
             reply_markup=markup
         )
         await message.answer(
-            text=f"Bellashuv taklifi {opponent_fullname} ga yuborildi!", reply_markup=uz_start_buttons
+            text=f"Bellashuv taklifi foydalanuvchiga yuborildi!", reply_markup=uz_start_buttons
         )
     else:
         await message.answer(
-            text=f"Foydalanuvchi {opponent_fullname} botimiz a'zolari safida mavjud emas!",
+            text=f"Taklif qilinayotgan foydalanuvchi botimiz a'zolari safida mavjud emas!",
             reply_markup=bot_offer_ibuttons(
-                offer_text="Botdan foydalanish taklifini yuborish", full_name=user_fullname
+                offer_text="Botdan foydalanish taklifini yuborish", full_name=user_fullname,
+                bot_link="@IqtisodchiRobot"
             )
         )
