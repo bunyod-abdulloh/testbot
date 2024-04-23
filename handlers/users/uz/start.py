@@ -26,7 +26,7 @@ async def do_start(message: types.Message, state: FSMContext):
     await state.clear()
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name
-
+    print(full_name)
     try:
         await db.add_user(telegram_id=telegram_id, full_name=full_name)
     except Exception as error:

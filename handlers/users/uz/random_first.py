@@ -74,9 +74,9 @@ def second_text(correct_answers, result_text, wrong_answers, book_rating, all_ra
     return text
 
 
-async def send_result_or_continue(first_telegram_id, battle_id, counter, answer_emoji, correct_emoji, wrong_emoji,
-                                  book_id, book_name, call: types.CallbackQuery, state: FSMContext, counter_key,
-                                  opponent=False):
+async def send_result_or_continue(battle_id, counter, answer_emoji, book_id, book_name, call: types.CallbackQuery,
+                                  state: FSMContext, counter_key, opponent=False):
+    first_telegram_id = call.from_user.id
     if counter == 10:
         await db.add_answer_(
             telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter,
@@ -87,11 +87,11 @@ async def send_result_or_continue(first_telegram_id, battle_id, counter, answer_
         )
         # To'g'ri javoblar soni
         first_correct_answers = await db.count_answers(
-            telegram_id=first_telegram_id, answer=correct_emoji
+            telegram_id=first_telegram_id, answer="✅"
         )
         # Noto'g'ri javoblar soni
         first_wrong_answers = await db.count_answers(
-            telegram_id=first_telegram_id, answer=wrong_emoji
+            telegram_id=first_telegram_id, answer="❌"
         )
         # To'g'ri javoblar sonini Results jadvalidan yangilash
         await db.update_results(
@@ -133,11 +133,11 @@ async def send_result_or_continue(first_telegram_id, battle_id, counter, answer_
             second_telegram_id = second_battler[0]['telegram_id']
             # Raqib to'g'ri javoblari soni
             second_correct_answers = await db.count_answers(
-                telegram_id=second_telegram_id, answer=correct_emoji
+                telegram_id=second_telegram_id, answer="✅"
             )
             # Raqib noto'g'ri javoblari soni
             second_wrong_answers = await db.count_answers(
-                telegram_id=second_telegram_id, answer=wrong_emoji
+                telegram_id=second_telegram_id, answer="❌"
             )
             # Raqib to'g'ri javoblari sonini Results jadvalidan yangilash
             await db.update_results(
@@ -190,6 +190,12 @@ async def send_result_or_continue(first_telegram_id, battle_id, counter, answer_
                 )
                 await db.edit_status_users(
                     game_on=False, telegram_id=second_telegram_id
+                )
+                await db.delete_user_results(
+                    telegram_id=first_telegram_id
+                )
+                await db.delete_user_results(
+                    telegram_id=second_telegram_id
                 )
     else:
         counter += 1
@@ -257,10 +263,15 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
     await state.update_data(
         c_one=c_one
     )
-    # Results jadvaliga userni qo'shish
-    await db.add_gamer(
+    # Userni natijalar jadvalida bor yo'qligini tekshirish
+    check_in_results = await db.select_user_in_results(
         telegram_id=first_player_id, book_id=book_id
     )
+    if not check_in_results:
+        # Results jadvaliga userni qo'shish
+        await db.add_gamer(
+            telegram_id=first_player_id, book_id=book_id
+        )
     # Users jadvalida userga game_on yoqish
     await db.edit_status_users(
         game_on=True, telegram_id=first_player_id
@@ -274,12 +285,10 @@ async def get_question_first_a(call: types.CallbackQuery, state: FSMContext):
     book_id = int(call.data.split(":")[2])
     book_name = await db.select_book_by_id(id_=book_id)
     battle_id = int(call.data.split(":")[3])
-    telegram_id = call.from_user.id
 
     await send_result_or_continue(
-        first_telegram_id=telegram_id, battle_id=battle_id, counter=c, answer_emoji="✅", correct_emoji="✅",
-        wrong_emoji="❌", book_id=book_id, book_name=book_name['table_name'], call=call, state=state,
-        counter_key="c_one"
+        battle_id=battle_id, counter=c, answer_emoji="✅", book_id=book_id, book_name=book_name['table_name'],
+        call=call, state=state, counter_key="c_one"
     )
 
 
@@ -293,10 +302,8 @@ async def get_question_first(call: types.CallbackQuery, state: FSMContext):
     c = data['c_one']
     book_id = int(call.data.split(":")[2])
     battle_id = int(call.data.split(":")[3])
-    first_telegram_id = call.from_user.id
     book_name = await db.select_book_by_id(id_=book_id)
     await send_result_or_continue(
-        first_telegram_id=first_telegram_id, battle_id=battle_id, counter=c, answer_emoji="❌", correct_emoji="✅",
-        wrong_emoji="❌", book_id=book_id, book_name=book_name['table_name'], call=call, state=state,
-        counter_key="c_one"
+        battle_id=battle_id, counter=c, answer_emoji="❌", book_id=book_id, book_name=book_name['table_name'],
+        call=call, state=state, counter_key="c_one"
     )

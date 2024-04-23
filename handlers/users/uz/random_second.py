@@ -35,16 +35,21 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
     await state.update_data(
         c_two=c_two
     )
+    # Userni natijalar jadvalida bor yo'qligini tekshirish
+    check_in_results = await db.select_user_in_results(
+        telegram_id=second_player_id, book_id=book_id
+    )
+    if not check_in_results:
+        # Results jadvaliga userni qo'shish
+        await db.add_gamer(
+            telegram_id=second_player_id, book_id=book_id
+        )
     # Users jadvalida userga game_on yoqish
     await db.edit_status_users(
         game_on=True, telegram_id=second_player_id
     )
     await generate_question(
         book_id=book_id, counter=c_two, call=call, battle_id=battle_id, opponent=True
-    )
-    # Results jadvaliga userni qo'shish
-    await db.add_gamer(
-        telegram_id=second_player_id, book_id=book_id
     )
 
 
@@ -57,9 +62,8 @@ async def get_question_answer_a(call: types.CallbackQuery, state: FSMContext):
     book_name = await db.select_book_by_id(id_=book_id)
     battle_id = int(call.data.split(":")[3])
     await send_result_or_continue(
-        first_telegram_id=telegram_id, battle_id=battle_id, counter=c, answer_emoji="✅", correct_emoji="✅",
-        wrong_emoji="❌", book_id=book_id, book_name=book_name['table_name'], call=call, state=state, opponent=True,
-        counter_key="c_two"
+        battle_id=battle_id, counter=c, answer_emoji="✅", book_id=book_id, book_name=book_name['table_name'],
+        call=call, state=state, opponent=True, counter_key="c_two"
     )
 
 
@@ -76,7 +80,6 @@ async def get_question_answer(call: types.CallbackQuery, state: FSMContext):
     book_name = await db.select_book_by_id(id_=book_id)
     battle_id = int(call.data.split(":")[3])
     await send_result_or_continue(
-        first_telegram_id=telegram_id, battle_id=battle_id, counter=c, answer_emoji="❌", correct_emoji="✅",
-        wrong_emoji="❌", book_id=book_id, book_name=book_name['table_name'], call=call, state=state, opponent=True,
-        counter_key="c_two"
+        battle_id=battle_id, counter=c, answer_emoji="❌", book_id=book_id, book_name=book_name['table_name'],
+        call=call, state=state, opponent=True, counter_key="c_two"
     )

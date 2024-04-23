@@ -8,8 +8,11 @@ router = Router()
 
 
 @router.message(F.text == "⚔️ Bellashuv")
-async def uz_battle_main(message: types.Message):
-    telegram_id = message.from_user.id
+async def uz_battle_main(message: types.Message = None, call: types.CallbackQuery = None):
+    if message:
+        telegram_id = message.from_user.id
+    if call:
+        telegram_id = call.from_user.id
 
     # Users jadvalidan game_on ustunini FALSE holatiga tushirish
     await db.edit_status_users(
@@ -25,12 +28,20 @@ async def uz_battle_main(message: types.Message):
     await db.delete_answers_user(
         telegram_id=telegram_id
     )
-    await message.answer(
-        text="Savollar beriladigan kitob nomini tanlang",
-        reply_markup=await battle_main_ibuttons(
-            back_text="Ortga", back_callback="uz_back_battle_main"
+    if message:
+        await message.answer(
+            text="Savollar beriladigan kitob nomini tanlang",
+            reply_markup=await battle_main_ibuttons(
+                back_text="Ortga", back_callback="back_battle_main"
+            )
         )
-    )
+    if call:
+        await call.message.edit_text(
+            text="Savollar beriladigan kitob nomini tanlang",
+            reply_markup=await battle_main_ibuttons(
+                back_text="Ortga", back_callback="back_battle_main"
+            )
+        )
 
 
 @router.callback_query(F.data.startswith("table_"))
@@ -39,14 +50,21 @@ async def get_book_name(call: types.CallbackQuery):
     await call.message.edit_text(
         text="Bellashuv turini tanlang", reply_markup=battle_ibuttons(
             random_opponent="Tasodifiy raqib bilan", offer_opponent="Do'stni taklif qilish",
-            playing_alone="Yakka o'yin", back="Ortga", back_callback="uz_back", book_id=book_id
+            playing_alone="Yakka o'yin", back="Ortga", back_callback="back_select_book", book_id=book_id
         )
     )
 
 
-@router.callback_query(F.data == "uz_back")
+@router.callback_query(F.data == "back_battle_main")
 async def uz_back(call: types.CallbackQuery):
     await call.message.delete()
     await call.message.answer(
         text="Bosh sahifa", reply_markup=uz_start_buttons
+    )
+
+
+@router.callback_query(F.data == "back_select_book")
+async def uz_back_books(call: types.CallbackQuery):
+    await uz_battle_main(
+        call=call
     )

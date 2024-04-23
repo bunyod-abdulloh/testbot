@@ -4,6 +4,7 @@ from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from handlers.users.uz.random_first import first_text
 from loader import db
 
 router = Router()
@@ -46,26 +47,95 @@ async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     )
 
 
-async def question_answer_alone(call: types.CallbackQuery, c: str, answer: str):
-    book_id = call.data.split(':')[2]
-    user_id = call.from_user.id
+async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answer_emoji, book_id, book_name,
+                                        counter_key, state: FSMContext):
+    telegram_id = call.from_user.id
 
-    if c == 10:
-        # Temporary jadvaliga savollarni javoblarini qo'shish
+    if counter == 10:
         await db.add_answer_(
-            telegram_id=user_id, battle_id=0, question_number=c, answer=answer, game_status="OFF"
+            telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON"
+        )
+        await db.update_all_game_status(
+            game_status="OVER", telegram_id=telegram_id, battle_id=0
+        )
+        # To'g'ri javoblar soni
+        correct_answers = await db.count_answers(
+            telegram_id=telegram_id, answer="✅"
+        )
+        # Noto'g'ri javoblar soni
+        wrong_answers = await db.count_answers(
+            telegram_id=telegram_id, answer="❌"
+        )
+        # To'g'ri javoblar sonini Results jadvalidan yangilash
+        await db.update_results(
+            results=correct_answers, telegram_id=telegram_id, book_id=book_id
+        )
+        # Results jadvalidan user reytingini kitob bo'yicha aniqlash
+        rating_book = await db.get_rating_book(
+            book_id=book_id
+        )
+        rating_book_ = int()
+        for index, result in enumerate(rating_book):
+            if result['telegram_id'] == telegram_id:
+                rating_book_ += index + 1
+                break
+        # Results jadvalidan userning umumiy reytingini aniqlash
+        all_rating = await db.get_rating_all()
+        all_rating_ = int()
+        for index, result in enumerate(all_rating):
+            if result['telegram_id'] == telegram_id:
+                all_rating_ += index + 1
+                break
+        f_text = first_text(
+            book_name=book_name, result_text="Sizning natijangiz", correct_answers=correct_answers,
+            wrong_answers=wrong_answers, book_rating=rating_book_, all_rating=all_rating_
+        )
+        await call.message.edit_text(
+            text=f_text
+        )
+        await db.edit_status_users(
+            game_on=False, telegram_id=telegram_id
+        )
+        await db.delete_user_results(
+            telegram_id=telegram_id
+        )
+    else:
+        await db.add_answer_(
+            telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON"
+        )
+        counter += 1
+        await generate_question_alone(
+            book_id=book_id, call=call, counter=counter
+        )
+        await state.update_data(
+            {counter_key: counter}
         )
 
 
 @router.callback_query(F.data.startswith("alone:"))
 async def alone_first(call: types.CallbackQuery, state: FSMContext):
-    book_id = call.data.split(":")[1]
+    book_id = int(call.data.split(":")[1])
+    telegram_id = call.from_user.id
     c = 1
-    await state.update_data(
-        c_alone=c
-    )
+
     await generate_question_alone(
         book_id=book_id, call=call, counter=c
+    )
+    # Userni natijalar jadvalida bor yo'qligini tekshirish
+    check_in_results = await db.select_user_in_results(
+        telegram_id=first_player_id, book_id=book_id
+    )
+    if not check_in_results:
+        # Results jadvaliga userni qo'shish
+        await db.add_gamer(
+            telegram_id=telegram_id, book_id=book_id
+        )
+    # Users jadvalida userga game_on yoqish
+    await db.edit_status_users(
+        game_on=True, telegram_id=telegram_id
+    )
+    await state.update_data(
+        c_alone=c
     )
 
 
@@ -73,4 +143,27 @@ async def alone_first(call: types.CallbackQuery, state: FSMContext):
 async def alone_second(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     c = data['c_alone']
+    book_id = int(call.data.split(":")[2])
+    book_name = await db.select_book_by_id(id_=book_id)
 
+    await send_alone_result_or_continue(
+        counter=c, call=call, answer_emoji="✅", book_id=book_id, book_name=book_name['table_name'],
+        counter_key="c_alone", state=state
+    )
+
+
+magic_alone = (F.data.startswith("al_question:b") | F.data.startswith("al_question:c") |
+               F.data.startswith("al_question:d"))
+
+
+@router.callback_query(magic_alone)
+async def alone_third(call: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    c = data['c_alone']
+    book_id = int(call.data.split(":")[2])
+    book_name = await db.select_book_by_id(id_=book_id)
+
+    await send_alone_result_or_continue(
+        counter=c, call=call, answer_emoji="❌", book_id=book_id, book_name=book_name['table_name'],
+        counter_key="c_alone", state=state
+    )

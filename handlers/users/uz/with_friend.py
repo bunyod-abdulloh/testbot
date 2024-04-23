@@ -40,31 +40,34 @@ async def friend_shared(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     user_fullname = message.from_user.full_name
 
-    # get_username = await bot.get
-    # opponent_fullname = get_username.full_name
-
     select_opponent = await db.select_user(
         telegram_id=opponent_id
     )
 
     if select_opponent:
-        markup = to_offer_ibuttons(
-            agree_text="Qabul qilish", agree_id=user_id, refusal_text="Rad qilish", book_id=book_id
-        )
-        await bot.send_message(
-            chat_id=opponent_id,
-            text=f"Foydalanuvchi {user_fullname} Sizni {book_name['table_name']} kitobi bo'yicha bellashuvga taklif "
-                 f"qilmoqda!",
-            reply_markup=markup
-        )
-        await message.answer(
-            text=f"Bellashuv taklifi foydalanuvchiga yuborildi!", reply_markup=uz_start_buttons
-        )
+        opponent_status = await db.select_user(telegram_id=opponent_id)
+        if opponent_status['game_on']:
+            await message.answer(
+                text="Taklif qilinayotgan foydalanuvchi hozirda bellashuvda ishtirok etmoqda! Birozdan so'ng qayta "
+                     "taklif habarini yuborishingiz mumkin!"
+            )
+        else:
+            markup = to_offer_ibuttons(
+                agree_text="Qabul qilish", agree_id=user_id, refusal_text="Rad qilish", book_id=book_id
+            )
+            await bot.send_message(
+                chat_id=opponent_id,
+                text=f"Foydalanuvchi {user_fullname} Sizni {book_name['table_name']} kitobi bo'yicha ilmiy bellashuvga "
+                     f"taklif qilmoqda!",
+                reply_markup=markup
+            )
+            await message.answer(
+                text=f"Bellashuv taklifi foydalanuvchiga yuborildi!", reply_markup=uz_start_buttons
+            )
     else:
         await message.answer(
             text=f"Taklif qilinayotgan foydalanuvchi botimiz a'zolari safida mavjud emas!",
             reply_markup=bot_offer_ibuttons(
-                offer_text="Botdan foydalanish taklifini yuborish", full_name=user_fullname,
-                bot_link="@IqtisodchiRobot"
+                full_name=user_fullname, bot_link="@IqtisodchiRobot"
             )
         )

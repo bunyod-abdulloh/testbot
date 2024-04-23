@@ -110,6 +110,9 @@ class Database:
         sql = "INSERT INTO Results (telegram_id, book_id, result) VALUES($1, $2, $3)"
         return await self.execute(sql, telegram_id, book_id, result, fetchrow=True)
 
+    async def select_user_in_results(self, telegram_id,,book_id):
+        sql = f"SELECT * FROM Users WHERE telegram_id='{telegram_id}' AND book_id='{book_id}    '"
+        return await self.execute(sql, fetchrow=True)
     async def update_results(self, results, telegram_id, book_id):
         sql = (f"UPDATE Results SET result=result + '{results}' WHERE telegram_id='{telegram_id}' AND "
                f"book_id='{book_id}'")
