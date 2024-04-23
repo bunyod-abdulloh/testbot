@@ -93,10 +93,15 @@ async def send_result_or_continue(battle_id, counter, answer_emoji, book_id, boo
         first_wrong_answers = await db.count_answers(
             telegram_id=first_telegram_id, answer="❌"
         )
-        # To'g'ri javoblar sonini Results jadvalidan yangilash
-        await db.update_results(
-            results=first_correct_answers, telegram_id=first_telegram_id, book_id=book_id
+        # Userni Result jadvalida natijasini tekshirish
+        check_results = await db.select_battle_id_results(
+            telegram_id=first_telegram_id, book_id=book_id, battle_id=battle_id
         )
+        if check_results['result'] == 0:
+            # To'g'ri javoblar sonini Results jadvalidan yangilash
+            await db.update_results(
+                results=first_correct_answers, telegram_id=first_telegram_id, book_id=book_id
+            )
         # Results jadvalidan user reytingini kitob bo'yicha aniqlash
         rating_book = await db.get_rating_book(
             book_id=book_id
@@ -139,10 +144,15 @@ async def send_result_or_continue(battle_id, counter, answer_emoji, book_id, boo
             second_wrong_answers = await db.count_answers(
                 telegram_id=second_telegram_id, answer="❌"
             )
-            # Raqib to'g'ri javoblari sonini Results jadvalidan yangilash
-            await db.update_results(
-                results=second_correct_answers, telegram_id=second_telegram_id, book_id=book_id
+            # Userni Result jadvalida natijasini tekshirish
+            check_results_ = await db.select_battle_id_results(
+                telegram_id=second_telegram_id, book_id=book_id, battle_id=battle_id
             )
+            if check_results_['result'] == 0:
+                # Raqib to'g'ri javoblari sonini Results jadvalidan yangilash
+                await db.update_results(
+                    results=second_correct_answers, telegram_id=second_telegram_id, book_id=book_id
+                )
             # Results jadvalidan raqib reytingini kitob bo'yicha aniqlash
             second_rating_book = int()
             for index, result in enumerate(rating_book):
@@ -198,6 +208,11 @@ async def send_result_or_continue(battle_id, counter, answer_emoji, book_id, boo
                     telegram_id=second_telegram_id
                 )
     else:
+        await db.add_answer_(
+            telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter,
+            answer=answer_emoji, game_status="ON"
+        )
+
         counter += 1
         if opponent:
             await generate_question(
@@ -210,10 +225,7 @@ async def send_result_or_continue(battle_id, counter, answer_emoji, book_id, boo
         await state.update_data(
             {counter_key: counter}
         )
-        await db.add_answer_(
-            telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter,
-            answer=answer_emoji, game_status="ON"
-        )
+
 
 
 @router.callback_query(F.data.startswith("book_id:"))
