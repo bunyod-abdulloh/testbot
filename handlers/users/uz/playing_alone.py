@@ -123,7 +123,7 @@ async def alone_first(call: types.CallbackQuery, state: FSMContext):
     )
     # Userni natijalar jadvalida bor yo'qligini tekshirish
     check_in_results = await db.select_user_in_results(
-        telegram_id=first_player_id, book_id=book_id
+        telegram_id=telegram_id, book_id=book_id
     )
     if not check_in_results:
         # Results jadvaliga userni qo'shish
