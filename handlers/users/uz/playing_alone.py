@@ -1,4 +1,8 @@
+import asyncio
+import datetime
 import random
+import time
+
 
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
@@ -9,6 +13,28 @@ from loader import db
 
 router = Router()
 
+first_time = datetime.datetime.now()
+time.sleep(2)
+later_time = datetime.datetime.now()
+
+difference = later_time - first_time
+
+minutes, seconds = divmod(difference.total_seconds(), 60)
+
+print(f"Time difference: {minutes} minutes, {seconds} seconds")
+time.sleep(5)
+first_times = datetime.datetime.now()
+time.sleep(6)
+later_times = datetime.datetime.now()
+
+differences = later_times - first_times
+
+minutess, secondss = divmod(differences.total_seconds(), 60)
+
+print(f"Time difference: {minutess} minutes, {secondss} seconds")
+
+if difference < differences:
+    print("natija")
 
 async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     questions = await db.select_all_questions(table_name=f"table_{book_id}")
@@ -112,10 +138,36 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         )
 
 
+async def countdown(t, call: types.CallbackQuery):
+    while t:
+        mins, secs = divmod(t, 60)
+        timer = '{:02d}:{:02d}'.format(mins, secs)
+        print(timer, end="\r")
+        await call.message.edit_text(
+            text=f"{timer}"
+        )
+        await asyncio.sleep(1)
+        t -= 1
+
+
 @router.callback_query(F.data.startswith("alone:"))
 async def alone_first(call: types.CallbackQuery, state: FSMContext):
     book_id = int(call.data.split(":")[1])
     telegram_id = call.from_user.id
+
+    # await call.message.answer(
+    #     text="Boshlandi!!!"
+    # )
+    # t = 10
+    # while t:
+    #     mins, secs = divmod(t, 60)
+    #     timer = '{:02d}:{:02d}'.format(mins, secs)
+    #     print(timer, end="\r")
+    #     await call.message.edit_text(
+    #         text=f"{timer}"
+    #     )
+    #     await asyncio.sleep(1)
+    #     t -= 1
     c = 1
 
     await generate_question_alone(
@@ -137,6 +189,21 @@ async def alone_first(call: types.CallbackQuery, state: FSMContext):
     await state.update_data(
         c_alone=c
     )
+
+
+@router.callback_query(F.data.endswith(":timer"))
+async def alone_timer(call: types.CallbackQuery):
+    print(call.data)
+    # t = 60
+    # while t:
+    #     mins, secs = divmod(t, 60)
+    #     timer = '{:02d}:{:02d}'.format(mins, secs)
+    #     print(timer, end="\r")
+    #     await call.message.edit_text(
+    #         text=f"{timer}"
+    #     )
+    #     await asyncio.sleep(1)
+    #     t -= 1
 
 
 @router.callback_query(F.data.startswith("al_question:a"))

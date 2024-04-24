@@ -5,12 +5,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from loader import db
 
 
-class BattleCallback(CallbackData, prefix="battle"):
-    book_name: str
-    random: str
-    # offer: str
-
-
 class OfferCallback(CallbackData, prefix="random_opponent"):
     agree_id: int
     book_id: int
@@ -19,14 +13,6 @@ class OfferCallback(CallbackData, prefix="random_opponent"):
 class StartPlayingCallback(CallbackData, prefix="start_playing"):
     book_id: int
     battle_id: int
-
-
-class QuestionsCallback(CallbackData, prefix="questions"):
-    question_id: int
-    a_correct: str
-    b: str
-    c: str
-    d: str
 
 
 def check_user_ibuttons(status: str):
@@ -71,7 +57,7 @@ def battle_ibuttons(random_opponent: str, offer_opponent: str, playing_alone: st
                 InlineKeyboardButton(text=f"😊 {offer_opponent}", callback_data=f"with_friend:{book_id}")
             ],
             [
-                InlineKeyboardButton(text=f"🥷 {playing_alone}", callback_data=f"alone:{book_id}")
+                InlineKeyboardButton(text=f"🥷 {playing_alone}", callback_data=f"alone:{book_id}:timer")
             ],
             [
                 InlineKeyboardButton(text=f"⬅️ {back}", callback_data=f"{back_callback}")
