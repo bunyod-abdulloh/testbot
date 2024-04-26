@@ -7,8 +7,18 @@ from loader import db
 router = Router()
 
 
+async def result_time_game(start_time, end_time):
+    """
+    O'yin boshlangan va tugagan vaqtni qabul qilib oradagi
+    farqni chiqaruvchi funksiya
+    """
+    difference = start_time - end_time
+    return difference
+
+
 @router.message(F.text == "⚔️ Bellashuv")
 async def uz_battle_main(message: types.Message = None, call: types.CallbackQuery = None):
+    telegram_id = str()
     if message:
         telegram_id = message.from_user.id
     if call:

@@ -1,40 +1,17 @@
-import asyncio
-import datetime
-import random
-import time
 
+import random
+from datetime import datetime
 
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from handlers.users.uz.battle_main import result_time_game
 from handlers.users.uz.random_first import first_text
 from loader import db
 
 router = Router()
 
-first_time = datetime.datetime.now()
-time.sleep(2)
-later_time = datetime.datetime.now()
-
-difference = later_time - first_time
-
-minutes, seconds = divmod(difference.total_seconds(), 60)
-
-print(f"Time difference: {minutes} minutes, {seconds} seconds")
-time.sleep(5)
-first_times = datetime.datetime.now()
-time.sleep(6)
-later_times = datetime.datetime.now()
-
-differences = later_times - first_times
-
-minutess, secondss = divmod(differences.total_seconds(), 60)
-
-print(f"Time difference: {minutess} minutes, {secondss} seconds")
-
-if difference < differences:
-    print("natija")
 
 async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     questions = await db.select_all_questions(table_name=f"table_{book_id}")
@@ -78,11 +55,23 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
     telegram_id = call.from_user.id
 
     if counter == 10:
-        await db.add_answer_(
+        await db.add_answer_to_temporary(
             telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON"
         )
         await db.update_all_game_status(
             game_status="OVER", telegram_id=telegram_id, battle_id=0
+        )
+        # User o'yinni tugatgan vaqtni DBga yozish
+        end_time = datetime.now()
+        await db.end_answer_to_temporary(
+            telegram_id=telegram_id, battle_id=0, end_time=end_time
+        )
+        start_time = await db.select_start_time(
+            telegram_id=telegram_id
+        )
+        # O'yin boshlangan va tugagan vaqtni hisoblash
+        difference = await result_time_game(
+            start_time=start_time[0][0], end_time=end_time
         )
         # To'g'ri javoblar soni
         correct_answers = await db.count_answers(
@@ -94,7 +83,7 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         )
         # To'g'ri javoblar sonini Results jadvalidan yangilash
         await db.update_results(
-            results=correct_answers, telegram_id=telegram_id, book_id=book_id
+            results=correct_answers, telegram_id=telegram_id, book_id=book_id, time_result=difference
         )
         # Results jadvalidan user reytingini kitob bo'yicha aniqlash
         rating_book = await db.get_rating_book(
@@ -122,11 +111,13 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         await db.edit_status_users(
             game_on=False, telegram_id=telegram_id
         )
+
+
         await db.delete_user_results(
             telegram_id=telegram_id
         )
     else:
-        await db.add_answer_(
+        await db.add_answer_to_temporary(
             telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON"
         )
         counter += 1
@@ -138,46 +129,22 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         )
 
 
-async def countdown(t, call: types.CallbackQuery):
-    while t:
-        mins, secs = divmod(t, 60)
-        timer = '{:02d}:{:02d}'.format(mins, secs)
-        print(timer, end="\r")
-        await call.message.edit_text(
-            text=f"{timer}"
-        )
-        await asyncio.sleep(1)
-        t -= 1
-
-
 @router.callback_query(F.data.startswith("alone:"))
 async def alone_first(call: types.CallbackQuery, state: FSMContext):
     book_id = int(call.data.split(":")[1])
     telegram_id = call.from_user.id
 
-    # await call.message.answer(
-    #     text="Boshlandi!!!"
-    # )
-    # t = 10
-    # while t:
-    #     mins, secs = divmod(t, 60)
-    #     timer = '{:02d}:{:02d}'.format(mins, secs)
-    #     print(timer, end="\r")
-    #     await call.message.edit_text(
-    #         text=f"{timer}"
-    #     )
-    #     await asyncio.sleep(1)
-    #     t -= 1
     c = 1
 
     await generate_question_alone(
         book_id=book_id, call=call, counter=c
     )
-    # Userni natijalar jadvalida bor yo'qligini tekshirish
+    # Userni Results jadvalida bor yo'qligini tekshirish
     check_in_results = await db.select_user_in_results(
         telegram_id=telegram_id, book_id=book_id
     )
     if not check_in_results:
+
         # Results jadvaliga userni qo'shish
         await db.add_gamer(
             telegram_id=telegram_id, book_id=book_id
@@ -189,21 +156,10 @@ async def alone_first(call: types.CallbackQuery, state: FSMContext):
     await state.update_data(
         c_alone=c
     )
-
-
-@router.callback_query(F.data.endswith(":timer"))
-async def alone_timer(call: types.CallbackQuery):
-    print(call.data)
-    # t = 60
-    # while t:
-    #     mins, secs = divmod(t, 60)
-    #     timer = '{:02d}:{:02d}'.format(mins, secs)
-    #     print(timer, end="\r")
-    #     await call.message.edit_text(
-    #         text=f"{timer}"
-    #     )
-    #     await asyncio.sleep(1)
-    #     t -= 1
+    start_time = datetime.now()
+    await db.start_time_to_temporary(
+        telegram_id=telegram_id, battle_id=0, start_time=start_time
+    )
 
 
 @router.callback_query(F.data.startswith("al_question:a"))

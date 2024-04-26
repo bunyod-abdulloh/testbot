@@ -1,7 +1,7 @@
 from aiogram import Router, types, F
 from aiogram.enums import ChatMemberStatus
 from aiogram.filters import CommandStart, ChatMemberUpdatedFilter, IS_MEMBER, IS_NOT_MEMBER, chat_member_updated, LEFT
-from aiogram.enums.parse_mode import ParseMode
+
 from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.fsm.context import FSMContext
 
@@ -9,7 +9,7 @@ from keyboards.inline.buttons import check_user_ibuttons
 from keyboards.reply.main_reply import main_button
 from loader import db, bot
 from data.config import ADMINS, GROUP_ID
-from utils.extra_datas import make_title
+
 
 router = Router()
 uz_start_buttons = main_button(
@@ -21,12 +21,19 @@ uz_check_buttons = check_user_ibuttons(
 )
 
 
+def format_timedelta(td):
+    hours, remainder = divmod(td.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    milliseconds = td.microseconds // 1000
+    return f"{hours:02}:{minutes:02}:{seconds:02}.{milliseconds:03}"
+
+
 @router.message(CommandStart())
 async def do_start(message: types.Message, state: FSMContext):
     await state.clear()
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name
-    print(full_name)
+
     try:
         await db.add_user(telegram_id=telegram_id, full_name=full_name)
     except Exception as error:

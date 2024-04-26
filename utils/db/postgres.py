@@ -1,3 +1,4 @@
+import datetime
 from typing import Union
 
 import asyncpg
@@ -97,7 +98,8 @@ class Database:
         id SERIAL PRIMARY KEY,                
         telegram_id BIGINT NOT NULL,        
         book_id INT NULL,        
-        result INT DEFAULT 0        
+        result INT DEFAULT 0,        
+        time_result INTERVAL NULL        
         );
         """
         await self.execute(sql, execute=True)
@@ -106,12 +108,16 @@ class Database:
         sql = "INSERT INTO Results (telegram_id, book_id) VALUES($1, $2)"
         return await self.execute(sql, telegram_id, book_id, fetchrow=True)
 
-    async def add_gamer_(self, telegram_id, book_id, result):
-        sql = "INSERT INTO Results (telegram_id, book_id, result) VALUES($1, $2, $3)"
-        return await self.execute(sql, telegram_id, book_id, result, fetchrow=True)
+    async def add_gamer_(self, telegram_id, book_id, result, timer):
+        sql = "INSERT INTO Results (telegram_id, book_id, result, timer) VALUES($1, $2, $3, $4)"
+        return await self.execute(sql, telegram_id, book_id, result, timer, fetchrow=True)
 
     async def select_user_in_results(self, telegram_id, book_id):
         sql = f"SELECT * FROM Results WHERE telegram_id='{telegram_id}' AND book_id='{book_id}'"
+        return await self.execute(sql, fetchrow=True)
+
+    async def select_in_results(self):
+        sql = f"SELECT * FROM Results"
         return await self.execute(sql, fetchrow=True)
 
     async def select_battle_id_results(self, telegram_id, book_id, battle_id):
@@ -119,9 +125,9 @@ class Database:
                f"AND battle_id='{battle_id}'")
         return await self.execute(sql, fetchrow=True)
 
-    async def update_results(self, results, telegram_id, book_id):
-        sql = (f"UPDATE Results SET result=result + '{results}' WHERE telegram_id='{telegram_id}' AND "
-               f"book_id='{book_id}'")
+    async def update_results(self, results, telegram_id, book_id, time_result):
+        sql = (f"UPDATE Results SET result=result + '{results}', time_result='{time_result}'"
+               f"WHERE telegram_id='{telegram_id}' AND book_id='{book_id}'")
         return await self.execute(sql, execute=True)
 
     async def get_rating_by_id(self, book_name):
@@ -214,32 +220,39 @@ class Database:
         battle_id INT NULL,
         question_number INT NULL,
         answer TEXT DEFAULT '❌',
-        game_status TEXT DEFAULT 'OFF'                                 
+        game_status TEXT DEFAULT 'OFF',
+        start_time TIMESTAMP NULL,
+        end_time TIMESTAMP NULL                                 
         );
         """
         await self.execute(sql, execute=True)
 
-    async def add_answer(self, telegram_id):
-        sql = f"INSERT INTO temporary (telegram_id) VALUES($1) returning id"
-        return await self.execute(sql, telegram_id, fetchrow=True)
+    # async def add_answer_to_temporary(self, telegram_id, start_time):
+    #     sql = f"INSERT INTO temporary (telegram_id, start_time) VALUES($1, $2) returning id"
+    #     return await self.execute(sql, telegram_id, start_time, fetchrow=True)
 
-    async def add_answer_(self, telegram_id, battle_id, question_number, answer, game_status):
+    async def start_time_to_temporary(self, telegram_id: int, battle_id: int, start_time: datetime.datetime):
+        sql = f"INSERT INTO temporary (telegram_id, battle_id, start_time) VALUES($1, $2, $3)"
+        return await self.execute(sql, telegram_id, battle_id, start_time, fetchrow=True)
+
+    async def add_answer_to_temporary(self, telegram_id: int, battle_id: int, question_number: int, answer: str,
+                                      game_status: str):
         sql = (f"INSERT INTO temporary (telegram_id, battle_id, question_number, answer, game_status) "
                f"VALUES($1, $2, $3, $4, $5)")
         return await self.execute(
             sql, telegram_id, battle_id, question_number, answer, game_status, fetchrow=True
         )
 
-    async def add_answer_second(self, second_player, battle_id, question_number, answer, game_status):
-        sql = (f"INSERT INTO temporary (second_player, battle_id, question_number, answer, game_status) "
-               f"VALUES($1, $2, $3, $4, $5)")
-        return await self.execute(
-            sql, second_player, battle_id, question_number, answer, game_status, fetchrow=True
-        )
+    async def end_answer_to_temporary(self, telegram_id: int, battle_id: int, end_time: datetime.datetime):
+        sql = f"INSERT INTO temporary (telegram_id, battle_id, end_time) VALUES($1, $2, $3)"
+        return await self.execute(sql, telegram_id, battle_id, end_time, fetchrow=True)
 
-    async def select_player(self, telegram_id):
-        sql = (f"SELECT answer FROM temporary WHERE telegram_id='{telegram_id}' AND question_number IS NOT NULL "
-               f"ORDER BY question_number")
+    async def select_start_time(self, telegram_id):
+        sql = f"SELECT start_time FROM temporary WHERE telegram_id='{telegram_id}' AND start_time IS NOT NULL"
+        return await self.execute(sql, fetch=True)
+
+    async def select_end_time(self, telegram_id):
+        sql = f"SELECT end_time FROM temporary WHERE telegram_id='{telegram_id}' AND end_time IS NOT NULL"
         return await self.execute(sql, fetch=True)
 
     async def select_second_player(self, second_player):
