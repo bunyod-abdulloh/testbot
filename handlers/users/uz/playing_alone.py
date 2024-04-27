@@ -144,7 +144,6 @@ async def alone_first(call: types.CallbackQuery, state: FSMContext):
         telegram_id=telegram_id, book_id=book_id
     )
     if not check_in_results:
-
         # Results jadvaliga userni qo'shish
         await db.add_gamer(
             telegram_id=telegram_id, book_id=book_id

@@ -12,7 +12,7 @@ async def result_time_game(start_time, end_time):
     O'yin boshlangan va tugagan vaqtni qabul qilib oradagi
     farqni chiqaruvchi funksiya
     """
-    difference = start_time - end_time
+    difference = end_time - start_time
     return difference
 
 

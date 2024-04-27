@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram import types, Router, F
 from aiogram.fsm.context import FSMContext
 
@@ -19,7 +21,7 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
         id_=book_id
     )
     # Temporary jadvaliga user ma'lumotlarini qo'shib battle idsini olish
-    id_ = await db.add_answer(
+    id_ = await db.add_battle_to_temporary(
         telegram_id=first_player_id
     )
     battle_id = id_[0]
@@ -35,7 +37,7 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
     await state.update_data(
         c_two=c_two
     )
-    # Userni natijalar jadvalida bor yo'qligini tekshirish
+    # Userni Results jadvalida bor yo'qligini tekshirish
     check_in_results = await db.select_user_in_results(
         telegram_id=second_player_id, book_id=book_id
     )
@@ -50,6 +52,10 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
     )
     await generate_question(
         book_id=book_id, counter=c_two, call=call, battle_id=battle_id, opponent=True
+    )
+    start_time = datetime.now()
+    await db.start_time_to_temporary(
+        telegram_id=second_player_id, battle_id=battle_id, start_time=start_time
     )
 
 
