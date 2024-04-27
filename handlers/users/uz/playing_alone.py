@@ -1,4 +1,3 @@
-
 import random
 from datetime import datetime
 
@@ -50,9 +49,11 @@ async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     )
 
 
-async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answer_emoji, book_id, book_name,
-                                        counter_key, state: FSMContext):
+async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answer_emoji, counter_key,
+                                        state: FSMContext):
     telegram_id = call.from_user.id
+    book_id = int(call.data.split(":")[2])
+    book_name = await db.select_book_by_id(id_=book_id)
 
     if counter == 10:
         await db.add_answer_to_temporary(
@@ -64,7 +65,7 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         # User o'yinni tugatgan vaqtni DBga yozish
         end_time = datetime.now()
         await db.end_answer_to_temporary(
-            telegram_id=telegram_id, battle_id=0, end_time=end_time
+            telegram_id=telegram_id, battle_id=0, answer="END_TIME", end_time=end_time
         )
         start_time = await db.select_start_time(
             telegram_id=telegram_id
@@ -73,6 +74,10 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         difference = await result_time_game(
             start_time=start_time[0][0], end_time=end_time
         )
+        # for n in range(5):
+        #     await db.add_gamer_(
+        #         telegram_id=telegram_id + n, book_id=book_id, result=185, timer=difference
+        #     )
         # To'g'ri javoblar soni
         correct_answers = await db.count_answers(
             telegram_id=telegram_id, answer="✅"
@@ -92,8 +97,9 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         rating_book_ = int()
         for index, result in enumerate(rating_book):
             if result['telegram_id'] == telegram_id:
-                rating_book_ += index + 1
+                rating_book_ += index
                 break
+        print(rating_book)
         # Results jadvalidan userning umumiy reytingini aniqlash
         all_rating = await db.get_rating_all()
         all_rating_ = int()
@@ -102,7 +108,7 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
                 all_rating_ += index + 1
                 break
         f_text = first_text(
-            book_name=book_name, result_text="Sizning natijangiz", correct_answers=correct_answers,
+            book_name=book_name['table_name'], result_text="Sizning natijangiz", correct_answers=correct_answers,
             wrong_answers=wrong_answers, book_rating=rating_book_, all_rating=all_rating_
         )
         await call.message.edit_text(
@@ -111,8 +117,6 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         await db.edit_status_users(
             game_on=False, telegram_id=telegram_id
         )
-
-
         await db.delete_user_results(
             telegram_id=telegram_id
         )
@@ -157,7 +161,7 @@ async def alone_first(call: types.CallbackQuery, state: FSMContext):
     )
     start_time = datetime.now()
     await db.start_time_to_temporary(
-        telegram_id=telegram_id, battle_id=0, start_time=start_time
+        telegram_id=telegram_id, battle_id=0, answer="START_TIME", start_time=start_time
     )
 
 
@@ -165,12 +169,9 @@ async def alone_first(call: types.CallbackQuery, state: FSMContext):
 async def alone_second(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     c = data['c_alone']
-    book_id = int(call.data.split(":")[2])
-    book_name = await db.select_book_by_id(id_=book_id)
 
     await send_alone_result_or_continue(
-        counter=c, call=call, answer_emoji="✅", book_id=book_id, book_name=book_name['table_name'],
-        counter_key="c_alone", state=state
+        counter=c, call=call, answer_emoji="✅", counter_key="c_alone", state=state
     )
 
 
@@ -182,10 +183,7 @@ magic_alone = (F.data.startswith("al_question:b") | F.data.startswith("al_questi
 async def alone_third(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     c = data['c_alone']
-    book_id = int(call.data.split(":")[2])
-    book_name = await db.select_book_by_id(id_=book_id)
 
     await send_alone_result_or_continue(
-        counter=c, call=call, answer_emoji="❌", book_id=book_id, book_name=book_name['table_name'],
-        counter_key="c_alone", state=state
+        counter=c, call=call, answer_emoji="❌", counter_key="c_alone", state=state
     )

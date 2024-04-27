@@ -63,13 +63,8 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
 async def get_question_answer_a(call: types.CallbackQuery, state: FSMContext):
     data = await state.update_data()
     c = data['c_two']
-    telegram_id = call.from_user.id
-    book_id = int(call.data.split(":")[2])
-    book_name = await db.select_book_by_id(id_=book_id)
-    battle_id = int(call.data.split(":")[3])
     await send_result_or_continue(
-        battle_id=battle_id, counter=c, answer_emoji="✅", book_id=book_id, book_name=book_name['table_name'],
-        call=call, state=state, opponent=True, counter_key="c_two"
+        counter=c, answer_emoji="✅", call=call, state=state, opponent=True, counter_key="c_two"
     )
 
 
@@ -81,11 +76,6 @@ second_answer_filter = (F.data.startswith("s_question:b") | F.data.startswith("s
 async def get_question_answer(call: types.CallbackQuery, state: FSMContext):
     data = await state.update_data()
     c = data['c_two']
-    telegram_id = call.from_user.id
-    book_id = int(call.data.split(":")[2])
-    book_name = await db.select_book_by_id(id_=book_id)
-    battle_id = int(call.data.split(":")[3])
     await send_result_or_continue(
-        battle_id=battle_id, counter=c, answer_emoji="❌", book_id=book_id, book_name=book_name['table_name'],
-        call=call, state=state, opponent=True, counter_key="c_two"
+        counter=c, answer_emoji="❌", call=call, state=state, opponent=True, counter_key="c_two"
     )

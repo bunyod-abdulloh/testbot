@@ -1,9 +1,11 @@
 import random
+from datetime import datetime
 
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from handlers.users.uz.battle_main import result_time_game
 from keyboards.inline.buttons import to_offer_ibuttons, StartPlayingCallback
 from loader import db, bot
 
@@ -74,16 +76,33 @@ def second_text(correct_answers, result_text, wrong_answers, book_rating, all_ra
     return text
 
 
-async def send_result_or_continue(battle_id, counter, answer_emoji, book_id, book_name, call: types.CallbackQuery,
-                                  state: FSMContext, counter_key, opponent=False):
+async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQuery, state: FSMContext,
+                                  counter_key, opponent=False):
     first_telegram_id = call.from_user.id
+    book_id = int(call.data.split(":")[2])
+    book_name = await db.select_book_by_id(
+        id_=book_id
+    )
+    battle_id = int(call.data.split(":")[3])
     if counter == 10:
-        await db.add_answer_(
+        await db.add_answer_to_temporary(
             telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter,
             answer=answer_emoji, game_status="ON"
         )
         await db.update_all_game_status(
             game_status="OVER", telegram_id=first_telegram_id, battle_id=battle_id
+        )
+        # User o'yinni tugatgan vaqtni DBga yozish
+        end_time = datetime.now()
+        await db.end_answer_to_temporary(
+            telegram_id=first_telegram_id, battle_id=battle_id, answer="END_TIME", end_time=end_time
+        )
+        start_time = await db.select_start_time(
+            telegram_id=first_telegram_id
+        )
+        # O'yin boshlangan va tugagan vaqtni hisoblash
+        difference = await result_time_game(
+            start_time=start_time[0][0], end_time=end_time
         )
         # To'g'ri javoblar soni
         first_correct_answers = await db.count_answers(
@@ -100,7 +119,7 @@ async def send_result_or_continue(battle_id, counter, answer_emoji, book_id, boo
         if check_results['result'] == 0:
             # To'g'ri javoblar sonini Results jadvalidan yangilash
             await db.update_results(
-                results=first_correct_answers, telegram_id=first_telegram_id, book_id=book_id
+                results=first_correct_answers, telegram_id=first_telegram_id, book_id=book_id, time_result=difference
             )
         # Results jadvalidan user reytingini kitob bo'yicha aniqlash
         rating_book = await db.get_rating_book(
@@ -208,7 +227,7 @@ async def send_result_or_continue(battle_id, counter, answer_emoji, book_id, boo
                     telegram_id=second_telegram_id
                 )
     else:
-        await db.add_answer_(
+        await db.add_answer_to_temporary(
             telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter,
             answer=answer_emoji, game_status="ON"
         )
@@ -225,7 +244,6 @@ async def send_result_or_continue(battle_id, counter, answer_emoji, book_id, boo
         await state.update_data(
             {counter_key: counter}
         )
-
 
 
 @router.callback_query(F.data.startswith("book_id:"))
@@ -288,19 +306,18 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
     await db.edit_status_users(
         game_on=True, telegram_id=first_player_id
     )
+    start_time = datetime.now()
+    await db.start_time_to_temporary(
+        telegram_id=first_player_id, battle_id=battle_id, answer="START_TIME", start_time=start_time
+    )
 
 
 @router.callback_query(F.data.startswith("question:a"))
 async def get_question_first_a(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     c = data['c_one']
-    book_id = int(call.data.split(":")[2])
-    book_name = await db.select_book_by_id(id_=book_id)
-    battle_id = int(call.data.split(":")[3])
-
     await send_result_or_continue(
-        battle_id=battle_id, counter=c, answer_emoji="✅", book_id=book_id, book_name=book_name['table_name'],
-        call=call, state=state, counter_key="c_one"
+        counter=c, answer_emoji="✅", call=call, state=state, counter_key="c_one"
     )
 
 
@@ -312,10 +329,6 @@ first_answer_filter = (F.data.startswith("question:b") | F.data.startswith("ques
 async def get_question_first(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     c = data['c_one']
-    book_id = int(call.data.split(":")[2])
-    battle_id = int(call.data.split(":")[3])
-    book_name = await db.select_book_by_id(id_=book_id)
     await send_result_or_continue(
-        battle_id=battle_id, counter=c, answer_emoji="❌", book_id=book_id, book_name=book_name['table_name'],
-        call=call, state=state, counter_key="c_one"
+        counter=c, answer_emoji="❌", call=call, state=state, counter_key="c_one"
     )

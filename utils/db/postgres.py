@@ -99,7 +99,8 @@ class Database:
         telegram_id BIGINT NOT NULL,        
         book_id INT NULL,        
         result INT DEFAULT 0,        
-        time_result INTERVAL NULL        
+        time_result INTERVAL NULL,
+        created_at DATE DEFAULT CURRENT_DATE        
         );
         """
         await self.execute(sql, execute=True)
@@ -109,7 +110,7 @@ class Database:
         return await self.execute(sql, telegram_id, book_id, fetchrow=True)
 
     async def add_gamer_(self, telegram_id, book_id, result, timer):
-        sql = "INSERT INTO Results (telegram_id, book_id, result, timer) VALUES($1, $2, $3, $4)"
+        sql = "INSERT INTO Results (telegram_id, book_id, result, time_result) VALUES($1, $2, $3, $4)"
         return await self.execute(sql, telegram_id, book_id, result, timer, fetchrow=True)
 
     async def select_user_in_results(self, telegram_id, book_id):
@@ -135,13 +136,14 @@ class Database:
                f"GROUP BY user ORDER BY total_result DESC")
         return await self.execute(sql, fetchrow=True)
 
-    # async def get_rating_id(self, book_id):
-    #     sql = (f"SELECT row_number() OVER (ORDER BY telegram_id) AS row_num, telegram_id, result FROM Results "
-    #            f"WHERE book_id='{book_id}'")
-    #     return await self.execute(sql, fetch=True)
+    async def get_rating_id(self, book_id, telegram_id):
+        sql = (f"SELECT row_number() OVER (ORDER BY time_result DESC) AS row_num, telegram_id, result FROM Results "
+               f"WHERE book_id='{book_id}' AND telegram_id='{telegram_id}'")
+        return await self.execute(sql, fetch=True)
 
     async def get_rating_book(self, book_id):
-        sql = f"SELECT telegram_id, result FROM Results WHERE book_id='{book_id}' AND result!=0 ORDER BY result DESC"
+        sql = (f"SELECT telegram_id, result FROM Results WHERE book_id='{book_id}' AND result!=0 "
+               f"ORDER BY time_result DESC")
         return await self.execute(sql, fetch=True)
 
     async def get_rating_all(self):
@@ -231,9 +233,10 @@ class Database:
         sql = f"INSERT INTO temporary (telegram_id) VALUES('{telegram_id}') returning id"
         return await self.execute(sql, fetchrow=True)
 
-    async def start_time_to_temporary(self, telegram_id: int, battle_id: int, start_time: datetime.datetime):
-        sql = "INSERT INTO temporary (telegram_id, battle_id, start_time) VALUES($1, $2, $3)"
-        return await self.execute(sql, telegram_id, battle_id, start_time, fetchrow=True)
+    async def start_time_to_temporary(self, telegram_id: int, battle_id: int, answer: str,
+                                      start_time: datetime.datetime):
+        sql = "INSERT INTO temporary (telegram_id, battle_id, answer, start_time) VALUES($1, $2, $3, $4)"
+        return await self.execute(sql, telegram_id, battle_id, answer, start_time, fetchrow=True)
 
     async def add_answer_to_temporary(self, telegram_id: int, battle_id: int, question_number: int, answer: str,
                                       game_status: str):
@@ -243,9 +246,9 @@ class Database:
             sql, telegram_id, battle_id, question_number, answer, game_status, fetchrow=True
         )
 
-    async def end_answer_to_temporary(self, telegram_id: int, battle_id: int, end_time: datetime.datetime):
-        sql = "INSERT INTO temporary (telegram_id, battle_id, end_time) VALUES($1, $2, $3)"
-        return await self.execute(sql, telegram_id, battle_id, end_time, fetchrow=True)
+    async def end_answer_to_temporary(self, telegram_id: int, battle_id: int, answer: str, end_time: datetime.datetime):
+        sql = "INSERT INTO temporary (telegram_id, battle_id, answer, end_time) VALUES($1, $2, $3, $4)"
+        return await self.execute(sql, telegram_id, battle_id, answer, end_time, fetchrow=True)
 
     async def select_start_time(self, telegram_id):
         sql = f"SELECT start_time FROM temporary WHERE telegram_id='{telegram_id}' AND start_time IS NOT NULL"

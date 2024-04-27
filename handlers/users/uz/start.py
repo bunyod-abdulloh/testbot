@@ -33,9 +33,14 @@ async def do_start(message: types.Message, state: FSMContext):
     await state.clear()
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name
-
+    check_from_db = await db.select_user(
+        telegram_id=telegram_id
+    )
     try:
-        await db.add_user(telegram_id=telegram_id, full_name=full_name)
+        if check_from_db:
+            pass
+        else:
+            await db.add_user(telegram_id=telegram_id, full_name=full_name)
     except Exception as error:
         logger.info(error)
     await message.answer(
