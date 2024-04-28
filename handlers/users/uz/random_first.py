@@ -118,8 +118,8 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
             telegram_id=first_telegram_id, answer="❌"
         )
         # Userni Result jadvalida natijasini tekshirish
-        check_results = await db.select_battle_id_results(
-            telegram_id=first_telegram_id, book_id=book_id, battle_id=battle_id
+        check_results = await db.select_user_in_results(
+            telegram_id=first_telegram_id, book_id=book_id
         )
         if check_results['result'] == 0:
             # To'g'ri javoblar sonini Results jadvalidan yangilash
@@ -147,7 +147,7 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
                 first_all_points += result['result']
                 break
         f_text = first_text(
-            book_name=book_name, result_text="Sizning natijangiz", correct_answers=first_correct_answers,
+            book_name=book_name['table_name'], result_text="Sizning natijangiz", correct_answers=first_correct_answers,
             wrong_answers=first_wrong_answers, book_rating=first_rating_book_, all_rating=first_all_rating,
             book_points=first_points, all_points=first_all_points
         )
@@ -186,13 +186,14 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
                 telegram_id=second_telegram_id, answer="❌"
             )
             # Userni Result jadvalida natijasini tekshirish
-            check_results_ = await db.select_battle_id_results(
-                telegram_id=second_telegram_id, book_id=book_id, battle_id=battle_id
+            check_results_ = await db.select_user_in_results(
+                telegram_id=second_telegram_id, book_id=book_id
             )
             if check_results_['result'] == 0:
                 # Raqib to'g'ri javoblari sonini Results jadvalidan yangilash
                 await db.update_results(
-                    results=second_correct_answers, telegram_id=second_telegram_id, book_id=book_id, time_result=difference_
+                    results=second_correct_answers, telegram_id=second_telegram_id,
+                    book_id=book_id, time_result=difference_
                 )
             # Results jadvalidan raqib reytingini kitob bo'yicha aniqlash
             second_rating_book = int()
@@ -260,7 +261,6 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
             telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter,
             answer=answer_emoji, game_status="ON"
         )
-
         counter += 1
         if opponent:
             await generate_question(
@@ -337,7 +337,7 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
     )
     start_time = datetime.now()
     await db.start_time_to_temporary(
-        telegram_id=first_player_id, battle_id=battle_id, answer="START_TIME", start_time=start_time
+        telegram_id=first_player_id, battle_id=battle_id, answer="FIRST_START", start_time=start_time
     )
 
 

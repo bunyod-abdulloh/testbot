@@ -114,7 +114,7 @@ class Database:
         return await self.execute(sql, telegram_id, book_id, result, timer, fetchrow=True)
 
     async def select_user_in_results(self, telegram_id, book_id):
-        sql = f"SELECT * FROM Results WHERE telegram_id='{telegram_id}' AND book_id='{book_id}'"
+        sql = f"SELECT result FROM Results WHERE telegram_id='{telegram_id}' AND book_id='{book_id}'"
         return await self.execute(sql, fetchrow=True)
 
     async def select_in_results(self):
