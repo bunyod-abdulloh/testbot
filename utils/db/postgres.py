@@ -136,18 +136,18 @@ class Database:
                f"GROUP BY user ORDER BY total_result DESC")
         return await self.execute(sql, fetchrow=True)
 
-    async def get_rating_id(self, book_id, telegram_id):
-        sql = (f"SELECT row_number() OVER (ORDER BY time_result DESC) AS row_num, telegram_id, result FROM Results "
-               f"WHERE book_id='{book_id}' AND telegram_id='{telegram_id}'")
+    async def get_rating_by_result(self, book_id):
+        sql = (f"SELECT telegram_id, result, time_result FROM Results WHERE book_id = '{book_id}' "
+               f"ORDER BY result DESC, time_result ASC")
         return await self.execute(sql, fetch=True)
 
     async def get_rating_book(self, book_id):
-        sql = (f"SELECT telegram_id, result FROM Results WHERE book_id='{book_id}' AND result!=0 "
-               f"ORDER BY time_result DESC")
+        sql = (f"SELECT telegram_id, result, time_result FROM Results WHERE book_id='{book_id}' AND result!=0 "
+               f"ORDER BY result DESC")
         return await self.execute(sql, fetch=True)
 
     async def get_rating_all(self):
-        sql = f"SELECT telegram_id, result FROM Results WHERE result!=0 ORDER BY result DESC"
+        sql = f"SELECT telegram_id, result FROM Results WHERE result!=0 ORDER BY result DESC, time_result ASC"
         return await self.execute(sql, fetch=True)
 
     async def delete_user_results(self, telegram_id):

@@ -57,21 +57,26 @@ async def generate_question(book_id, counter, call: types.CallbackQuery, battle_
     )
 
 
-def first_text(book_name, result_text, correct_answers, wrong_answers, book_rating, all_rating):
+def first_text(book_name, result_text, correct_answers, wrong_answers,
+               book_points, book_rating, all_points, all_rating):
     text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
             f"\n\n<i><b>Savollar soni:</b> 10 ta</i>\n\n😊 <i><b><u>{result_text}:</u></b></i>"
             f"\n\n✅ <i><b>To'g'ri javob:</b> {correct_answers} ta</i>"
             f"\n\n❌ <i><b>Noto'g'ri javob:</b> {wrong_answers} ta</i>"
+            f"\n\n💎 <i><b>Kitob bo'yicha to'plangan ball:</b> {book_points} ball</i>"
             f"\n\n📖 <i><b>Kitob bo'yicha reyting:</b> {book_rating} - o'rin</i>"
+            f"\n\n📥 <i><b>Umumiy ball:</b> {all_points} ball</i>"
             f"\n\n📚 <i><b>Umumiy reyting:</b> {all_rating} - o'rin</i>")
     return text
 
 
-def second_text(correct_answers, result_text, wrong_answers, book_rating, all_rating):
+def second_text(correct_answers, result_text, wrong_answers, book_points, book_rating, all_points, all_rating):
     text = (f"😎 <i><b><u>{result_text}:</u></b></i>"
             f"\n\n✅ <i><b>To'g'ri javob:</b> {correct_answers} ta</i>"
             f"\n\n❌ <i><b>Noto'g'ri javob:</b> {wrong_answers} ta</i>"
+            f"\n\n💎 <i><b>Kitob bo'yicha to'plangan ball:</b> {book_points} ball</i>"
             f"\n\n📖 <i><b>Kitob bo'yicha reyting:</b> {book_rating} - o'rin</i>"
+            f"\n\n📥 <i><b>Umumiy ball:</b> {all_points} ball</i>"
             f"\n\n📚 <i><b>Umumiy reyting:</b> {all_rating} - o'rin</i>")
     return text
 

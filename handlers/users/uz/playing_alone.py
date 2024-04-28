@@ -49,8 +49,8 @@ async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     )
 
 
-async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answer_emoji, counter_key,
-                                        state: FSMContext):
+async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answer_emoji,
+                                        counter_key, state: FSMContext):
     telegram_id = call.from_user.id
     book_id = int(call.data.split(":")[2])
     book_name = await db.select_book_by_id(id_=book_id)
@@ -74,10 +74,6 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         difference = await result_time_game(
             start_time=start_time[0][0], end_time=end_time
         )
-        # for n in range(5):
-        #     await db.add_gamer_(
-        #         telegram_id=telegram_id + n, book_id=book_id, result=185, timer=difference
-        #     )
         # To'g'ri javoblar soni
         correct_answers = await db.count_answers(
             telegram_id=telegram_id, answer="✅"
@@ -91,25 +87,32 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
             results=correct_answers, telegram_id=telegram_id, book_id=book_id, time_result=difference
         )
         # Results jadvalidan user reytingini kitob bo'yicha aniqlash
-        rating_book = await db.get_rating_book(
+        rating_book = await db.get_rating_by_result(
             book_id=book_id
         )
+
         rating_book_ = int()
+        book_points = int()
+
         for index, result in enumerate(rating_book):
             if result['telegram_id'] == telegram_id:
-                rating_book_ += index
+                rating_book_ += index + 1
+                book_points += result['result']
                 break
-        print(rating_book)
+
         # Results jadvalidan userning umumiy reytingini aniqlash
         all_rating = await db.get_rating_all()
         all_rating_ = int()
+        all_points = int()
         for index, result in enumerate(all_rating):
             if result['telegram_id'] == telegram_id:
                 all_rating_ += index + 1
+                all_points += result['result']
                 break
         f_text = first_text(
             book_name=book_name['table_name'], result_text="Sizning natijangiz", correct_answers=correct_answers,
-            wrong_answers=wrong_answers, book_rating=rating_book_, all_rating=all_rating_
+            wrong_answers=wrong_answers, book_points=book_points, book_rating=rating_book_,
+            all_points=all_points, all_rating=all_rating_
         )
         await call.message.edit_text(
             text=f_text
@@ -137,9 +140,7 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
 async def alone_first(call: types.CallbackQuery, state: FSMContext):
     book_id = int(call.data.split(":")[1])
     telegram_id = call.from_user.id
-
     c = 1
-
     await generate_question_alone(
         book_id=book_id, call=call, counter=c
     )
