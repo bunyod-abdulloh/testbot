@@ -30,12 +30,12 @@ async def uz_battle_main(message: types.Message = None, call: types.CallbackQuer
     )
 
     # Results jadvalidan user ma'lumotlarini tozalash
-    await db.delete_user_results(
+    await db.delete_from_results(
         telegram_id=telegram_id
     )
 
     # Temporary answers jadvalidan user ma'lumotlarini tozalash
-    await db.delete_answers_user(
+    await db.delete_from_temporary(
         telegram_id=telegram_id
     )
     if message:

@@ -36,6 +36,20 @@ async def do_start(message: types.Message, state: FSMContext):
     check_from_db = await db.select_user(
         telegram_id=telegram_id
     )
+    # Users jadvalidan game_on ustunini FALSE holatiga tushirish
+    await db.edit_status_users(
+        game_on=False, telegram_id=telegram_id
+    )
+
+    # Results jadvalidan user ma'lumotlarini tozalash
+    await db.delete_from_results(
+        telegram_id=telegram_id
+    )
+
+    # Temporary answers jadvalidan user ma'lumotlarini tozalash
+    await db.delete_from_temporary(
+        telegram_id=telegram_id
+    )
     try:
         if check_from_db:
             pass

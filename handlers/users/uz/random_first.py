@@ -107,7 +107,7 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
         )
         # O'yin boshlangan va tugagan vaqtni hisoblash
         difference = await result_time_game(
-            start_time=start_time[0][0], end_time=end_time
+            start_time=start_time[0]['start_time'], end_time=end_time
         )
         # To'g'ri javoblar soni
         first_correct_answers = await db.count_answers(
@@ -152,7 +152,7 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
             book_points=first_points, all_points=first_all_points
         )
         # Raqib o'yin holatini aniqlash
-        second_battler = await db.get_battle(
+        second_battler = await db.get_battle_temporary(
             battle_id=battle_id, telegram_id=first_telegram_id
         )
         if not second_battler:
@@ -211,7 +211,7 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
                     second_all_rating += index + 1
                     second_all_points += result['result']
                     break
-
+            print(f"{second_battler} 215")
             if second_battler[0]['game_status'] == "ON":
                 await call.message.edit_text(
                     text=f"{f_text}\n\n"
@@ -232,9 +232,10 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
                 )
                 # Ikkinchi o'yinchiga ikkala natijani yuborish
                 s_text_bot = first_text(
-                    book_name=book_name, result_text="Sizning natijaningiz", correct_answers=second_correct_answers,
-                    wrong_answers=second_wrong_answers, book_points=second_points, book_rating=second_rating_book,
-                    all_points=second_all_points, all_rating=second_all_rating
+                    book_name=book_name['table_name'], result_text="Sizning natijaningiz",
+                    correct_answers=second_correct_answers, wrong_answers=second_wrong_answers,
+                    book_points=second_points, book_rating=second_rating_book, all_points=second_all_points,
+                    all_rating=second_all_rating
                 )
                 f_text_bot = second_text(
                     correct_answers=first_correct_answers, result_text="Raqibingiz natijasi",
@@ -250,10 +251,11 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
                 await db.edit_status_users(
                     game_on=False, telegram_id=second_telegram_id
                 )
-                await db.delete_user_results(
+                # Natijalarni Temporary jadvalidan tozalash
+                await db.delete_from_temporary(
                     telegram_id=first_telegram_id
                 )
-                await db.delete_user_results(
+                await db.delete_from_temporary(
                     telegram_id=second_telegram_id
                 )
     else:

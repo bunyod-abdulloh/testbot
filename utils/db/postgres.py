@@ -150,7 +150,7 @@ class Database:
         sql = f"SELECT telegram_id, result FROM Results WHERE result!=0 ORDER BY result DESC, time_result ASC"
         return await self.execute(sql, fetch=True)
 
-    async def delete_user_results(self, telegram_id):
+    async def delete_from_results(self, telegram_id):
         await self.execute(f"DELETE FROM Results WHERE telegram_id='{telegram_id}' "
                            f"AND result=0", execute=True)
 
@@ -268,11 +268,7 @@ class Database:
                f"battle_id='{battle_id}'")
         return await self.execute(sql, execute=True)
 
-    async def get_battle_first(self, battle_id):
-        sql = f"SELECT * FROM temporary WHERE battle_id='{battle_id}' AND first_player IS NOT NULL"
-        return await self.execute(sql, fetch=True)
-
-    async def get_battle(self, battle_id, telegram_id):
+    async def get_battle_temporary(self, battle_id, telegram_id):
         sql = (f"SELECT * FROM temporary WHERE battle_id = '{battle_id}' AND telegram_id != '{telegram_id}' AND "
                f"telegram_id IS NOT NULL")
         return await self.execute(sql, fetch=True)
@@ -285,7 +281,7 @@ class Database:
     async def clean_temporary_table(self, battle_id):
         await self.execute(f"DELETE FROM temporary WHERE battle_id='{battle_id}'", execute=True)
 
-    async def delete_answers_user(self, telegram_id):
+    async def delete_from_temporary(self, telegram_id):
         await self.execute(f"DELETE FROM temporary WHERE telegram_id='{telegram_id}'", execute=True)
 
     async def drop_table_temporary(self):

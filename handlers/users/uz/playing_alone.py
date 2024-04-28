@@ -120,7 +120,8 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         await db.edit_status_users(
             game_on=False, telegram_id=telegram_id
         )
-        await db.delete_user_results(
+        # Natijani Temporary jadvalidan tozalash
+        await db.delete_from_temporary(
             telegram_id=telegram_id
         )
     else:
