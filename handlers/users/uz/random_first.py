@@ -100,7 +100,7 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
         # User o'yinni tugatgan vaqtni DBga yozish
         end_time = datetime.now()
         await db.end_answer_to_temporary(
-            telegram_id=first_telegram_id, battle_id=battle_id, answer="END_TIME", end_time=end_time
+            telegram_id=first_telegram_id, battle_id=battle_id, answer="FIRST_END", end_time=end_time
         )
         start_time = await db.select_start_time(
             telegram_id=first_telegram_id
@@ -127,24 +127,29 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
                 results=first_correct_answers, telegram_id=first_telegram_id, book_id=book_id, time_result=difference
             )
         # Results jadvalidan user reytingini kitob bo'yicha aniqlash
-        rating_book = await db.get_rating_book(
+        rating_book = await db.get_rating_by_result(
             book_id=book_id
         )
         first_rating_book_ = int()
+        first_points = int()
         for index, result in enumerate(rating_book):
             if result['telegram_id'] == first_telegram_id:
                 first_rating_book_ += index + 1
+                first_points += result['result']
                 break
         # Results jadvalidan userning umumiy reytingini aniqlash
         all_rating = await db.get_rating_all()
         first_all_rating = int()
+        first_all_points = int()
         for index, result in enumerate(all_rating):
             if result['telegram_id'] == first_telegram_id:
                 first_all_rating += index + 1
+                first_all_points += result['result']
                 break
         f_text = first_text(
             book_name=book_name, result_text="Sizning natijangiz", correct_answers=first_correct_answers,
-            wrong_answers=first_wrong_answers, book_rating=first_rating_book_, all_rating=first_all_rating
+            wrong_answers=first_wrong_answers, book_rating=first_rating_book_, all_rating=first_all_rating,
+            book_points=first_points, all_points=first_all_points
         )
         # Raqib o'yin holatini aniqlash
         second_battler = await db.get_battle(
@@ -160,6 +165,18 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
             )
         else:
             second_telegram_id = second_battler[0]['telegram_id']
+            # Raqib o'yinni tugatgan vaqtni ma'lumotlar omboriga yozish
+            end_time_ = datetime.now()
+            await db.end_answer_to_temporary(
+                telegram_id=second_telegram_id, battle_id=battle_id, answer="SECOND_END", end_time=end_time_
+            )
+            start_time_ = await db.select_start_time(
+                telegram_id=second_telegram_id
+            )
+            # O'yin boshlangan va tugagan vaqtni hisoblash
+            difference_ = await result_time_game(
+                start_time=start_time_[0][0], end_time=end_time_
+            )
             # Raqib to'g'ri javoblari soni
             second_correct_answers = await db.count_answers(
                 telegram_id=second_telegram_id, answer="✅"
@@ -175,19 +192,23 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
             if check_results_['result'] == 0:
                 # Raqib to'g'ri javoblari sonini Results jadvalidan yangilash
                 await db.update_results(
-                    results=second_correct_answers, telegram_id=second_telegram_id, book_id=book_id
+                    results=second_correct_answers, telegram_id=second_telegram_id, book_id=book_id, time_result=difference_
                 )
             # Results jadvalidan raqib reytingini kitob bo'yicha aniqlash
             second_rating_book = int()
+            second_points = int()
             for index, result in enumerate(rating_book):
                 if result['telegram_id'] == second_telegram_id:
                     second_rating_book += index + 1
+                    second_points += result['result']
                     break
             # Results jadvalidan raqib umumiy reytingini aniqlash
             second_all_rating = int()
+            second_all_points = int()
             for index, result in enumerate(all_rating):
                 if result['telegram_id'] == second_telegram_id:
                     second_all_rating += index + 1
+                    second_all_points += result['result']
                     break
 
             if second_battler[0]['game_status'] == "ON":
@@ -202,7 +223,8 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
                 # Birinchi o'yinchiga ikkala natijani yuborish
                 s_text = second_text(
                     correct_answers=second_correct_answers, result_text="Raqibingiz natijasi",
-                    wrong_answers=second_wrong_answers, book_rating=second_rating_book, all_rating=second_all_rating
+                    wrong_answers=second_wrong_answers, book_rating=second_rating_book, all_rating=second_all_rating,
+                    book_points=second_points, all_points=second_all_points
                 )
                 await call.message.edit_text(
                     text=f"{f_text}\n\n{s_text}"
@@ -210,11 +232,13 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
                 # Ikkinchi o'yinchiga ikkala natijani yuborish
                 s_text_bot = first_text(
                     book_name=book_name, result_text="Sizning natijaningiz", correct_answers=second_correct_answers,
-                    wrong_answers=second_wrong_answers, book_rating=second_rating_book, all_rating=second_all_rating
+                    wrong_answers=second_wrong_answers, book_points=second_points, book_rating=second_rating_book,
+                    all_points=second_all_points, all_rating=second_all_rating
                 )
                 f_text_bot = second_text(
                     correct_answers=first_correct_answers, result_text="Raqibingiz natijasi",
-                    wrong_answers=first_wrong_answers, book_rating=first_rating_book_, all_rating=first_all_rating
+                    wrong_answers=first_wrong_answers, book_points=first_points, book_rating=first_rating_book_,
+                    all_points=first_all_points, all_rating=first_all_rating
                 )
                 await bot.send_message(
                     chat_id=second_telegram_id, text=f"{s_text_bot}\n\n{f_text_bot}"
