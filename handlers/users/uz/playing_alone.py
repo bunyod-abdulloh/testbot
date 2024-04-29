@@ -111,7 +111,7 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
                 break
         f_text = first_text(
             book_name=book_name['table_name'], result_text="Sizning natijangiz", correct_answers=correct_answers,
-            wrong_answers=wrong_answers, book_points=book_points, book_rating=rating_book_,
+            wrong_answers=wrong_answers, time=difference, book_points=book_points, book_rating=rating_book_,
             all_points=all_points, all_rating=all_rating_
         )
         await call.message.edit_text(
