@@ -55,7 +55,7 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
     )
     start_time = datetime.now()
     await db.start_time_to_temporary(
-        telegram_id=second_player_id, battle_id=battle_id, answer="SECOND_START", game_status="ON", start_time=start_time
+        telegram_id=second_player_id, battle_id=battle_id, game_status="ON", start_time=start_time
     )
 
 
