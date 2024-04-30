@@ -308,13 +308,13 @@ class Database:
         return await self.execute(sql, fetchrow=True)
 
     async def update_counter(self, counter, telegram_id, battle_id):
-        sql = (f"UPDATE Counter SET counter='{counter}' WHERE telegram_id='{telegram_id}' AND "
+        sql = (f"UPDATE Counter SET counter=counter + '{counter}' WHERE telegram_id='{telegram_id}' AND "
                f"battle_id='{battle_id}'")
         return await self.execute(sql, execute=True)
 
     async def select_user_counter(self, telegram_id, battle_id):
-        sql = f"SELECT * FROM Counter WHERE telegram_id='{telegram_id}' AND battle_id='{battle_id}"
-        return await self.execute(sql, fetch=True)
+        sql = f"SELECT * FROM Counter WHERE telegram_id='{telegram_id}' AND battle_id='{battle_id}'"
+        return await self.execute(sql, fetchrow=True)
 
     async def delete_from_counter(self, telegram_id):
         await self.execute(f"DELETE FROM Counter WHERE telegram_id='{telegram_id}'", execute=True)

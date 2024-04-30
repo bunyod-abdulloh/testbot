@@ -2,7 +2,6 @@ import random
 from datetime import datetime
 
 from aiogram import Router, F, types
-from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.users.uz.battle_main import result_time_game
@@ -61,7 +60,8 @@ def first_text(book_name, result_text, correct_answers, wrong_answers, time,
                book_points, book_rating, all_points, all_rating):
     text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
             f"\n\n<i><b>Savollar soni:</b> 10 ta</i>\n\n😊 <i><b><u>{result_text}:</u></b></i>"
-            f"\n\n✅: <i>{correct_answers} ta |</i> ❌: <i>{wrong_answers} ta</i> | ⏳: <i>{time}</i>"            
+            f"\n\n✅: <i><u>{correct_answers} ta</u> |</i> ❌: <i><u>{wrong_answers} ta</u> |</i> "
+            f"⏳: <i><u>{time}</u></i>"            
             f"\n\n💎 <i><b>Kitob bo'yicha to'plangan ball:</b> {book_points} ball</i>"
             f"\n\n📖 <i><b>Kitob bo'yicha reyting:</b> {book_rating} - o'rin</i>"
             f"\n\n📥 <i><b>Umumiy ball:</b> {all_points} ball</i>"
@@ -71,7 +71,8 @@ def first_text(book_name, result_text, correct_answers, wrong_answers, time,
 
 def second_text(correct_answers, result_text, wrong_answers, time, book_points, book_rating, all_points, all_rating):
     text = (f"😎 <i><b><u>{result_text}:</u></b></i>"
-            f"\n\n✅: <i>{correct_answers} ta |</i> ❌: <i>{wrong_answers} ta |</i> ⏳: <i>{time}</i>"
+            f"\n\n✅: <i><u>{correct_answers} ta</u> |</i> ❌: <i><u>{wrong_answers} ta</u> |</i> "
+            f"⏳: <i><u>{time}</u></i>"
             f"\n\n💎 <i><b>Kitob bo'yicha to'plangan ball:</b> {book_points} ball</i>"
             f"\n\n📖 <i><b>Kitob bo'yicha reyting:</b> {book_rating} - o'rin</i>"
             f"\n\n📥 <i><b>Umumiy ball:</b> {all_points} ball</i>"
@@ -79,17 +80,19 @@ def second_text(correct_answers, result_text, wrong_answers, time, book_points, 
     return text
 
 
-async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQuery, state: FSMContext,
-                                  counter_key, opponent=False):
+async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, opponent=False):
     first_telegram_id = call.from_user.id
     book_id = int(call.data.split(":")[2])
     book_name = await db.select_book_by_id(
         id_=book_id
     )
     battle_id = int(call.data.split(":")[3])
-    if counter == 10:
+    counter_db = await db.select_user_counter(
+        telegram_id=first_telegram_id, battle_id=battle_id
+    )
+    if counter_db['counter'] >= 10:
         await db.add_answer_to_temporary(
-            telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter,
+            telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter_db['counter'],
             answer=answer_emoji, game_status="ON"
         )
         await db.update_all_game_status(
@@ -169,6 +172,10 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
                     text=f"{f_text}\n\n"
                          f"Raqibingiz hali o'yinni tugatmadi! Tugatganidan so'ng raqibingiz natijalari ham yuboriladi!"
                 )
+            # Counter jadvalidan user ma'lumotlarini tozalash
+            await db.delete_from_counter(
+                telegram_id=first_telegram_id
+            )
         else:
             second_telegram_id = second_battler[0]['telegram_id']
             # Raqib o'yinni tugatgan vaqtni ma'lumotlar omboriga yozish
@@ -270,12 +277,20 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
             await db.delete_from_temporary(
                 telegram_id=first_telegram_id
             )
+            # Counter jadvalidan User ma'lumotlarini tozalash
+            await db.delete_from_counter(
+                telegram_id=second_telegram_id
+            )
+        # Counter jadvalidan User ma'lumotlarini tozalash
+        await db.delete_from_counter(
+            telegram_id=first_telegram_id
+        )
     else:
         await db.add_answer_to_temporary(
-            telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter,
+            telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter_db['counter'],
             answer=answer_emoji, game_status="ON"
         )
-        counter += 1
+        counter = counter_db['counter'] + 1
         if opponent:
             await generate_question(
                 book_id=book_id, counter=counter, call=call, battle_id=battle_id, opponent=True
@@ -284,8 +299,8 @@ async def send_result_or_continue(counter, answer_emoji, call: types.CallbackQue
             await generate_question(
                 book_id=book_id, counter=counter, call=call, battle_id=battle_id
             )
-        await state.update_data(
-            {counter_key: counter}
+        await db.update_counter(
+            counter=1, battle_id=battle_id, telegram_id=first_telegram_id
         )
 
 
@@ -324,7 +339,7 @@ async def get_random_in_battle(call: types.CallbackQuery):
 
 
 @router.callback_query(StartPlayingCallback.filter())
-async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCallback, state: FSMContext):
+async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCallback):
     book_id = callback_data.book_id
     battle_id = callback_data.battle_id
     first_player_id = call.from_user.id
@@ -333,8 +348,9 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
     await generate_question(
         book_id=book_id, counter=c_one, call=call, battle_id=battle_id
     )
-    await state.update_data(
-        c_one=c_one
+    # Counter jadvaliga savol tartib raqamini kiritish
+    await db.add_to_counter(
+        telegram_id=first_player_id, battle_id=battle_id, counter=c_one
     )
     # Userni natijalar jadvalida bor yo'qligini tekshirish
     check_in_results = await db.select_user_in_results(
@@ -356,11 +372,9 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
 
 
 @router.callback_query(F.data.startswith("question:a"))
-async def get_question_first_a(call: types.CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    c = data['c_one']
+async def get_question_first_a(call: types.CallbackQuery):
     await send_result_or_continue(
-        counter=c, answer_emoji="✅", call=call, state=state, counter_key="c_one"
+        answer_emoji="✅", call=call
     )
 
 
@@ -369,9 +383,7 @@ first_answer_filter = (F.data.startswith("question:b") | F.data.startswith("ques
 
 
 @router.callback_query(first_answer_filter)
-async def get_question_first(call: types.CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    c = data['c_one']
+async def get_question_first(call: types.CallbackQuery):
     await send_result_or_continue(
-        counter=c, answer_emoji="❌", call=call, state=state, counter_key="c_one"
+        answer_emoji="❌", call=call
     )

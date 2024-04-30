@@ -1,8 +1,6 @@
 from datetime import datetime
 
 from aiogram import types, Router, F
-from aiogram.fsm.context import FSMContext
-
 from handlers.users.uz.random_first import send_result_or_continue, generate_question
 from keyboards.inline.buttons import OfferCallback, play_battle_ibuttons
 from loader import db, bot
@@ -11,7 +9,7 @@ router = Router()
 
 
 @router.callback_query(OfferCallback.filter())
-async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, state: FSMContext):
+async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback):
     first_player_id = callback_data.agree_id
     second_player_id = call.from_user.id
     book_id = callback_data.book_id
@@ -34,8 +32,9 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
         )
     )
     c_two = 1
-    await state.update_data(
-        c_two=c_two
+    # Counter jadvaliga savol tartib raqamini kiritish
+    await db.add_to_counter(
+        telegram_id=second_player_id, battle_id=battle_id, counter=c_two
     )
     # Userni Results jadvalida bor yo'qligini tekshirish
     check_in_results = await db.select_user_in_results(
@@ -60,11 +59,9 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, 
 
 
 @router.callback_query(F.data.startswith("s_question:a"))
-async def get_question_answer_a(call: types.CallbackQuery, state: FSMContext):
-    data = await state.update_data()
-    c = data['c_two']
+async def get_question_answer_a(call: types.CallbackQuery):
     await send_result_or_continue(
-        counter=c, answer_emoji="✅", call=call, state=state, opponent=True, counter_key="c_two"
+        answer_emoji="✅", call=call, opponent=True
     )
 
 
@@ -73,9 +70,7 @@ second_answer_filter = (F.data.startswith("s_question:b") | F.data.startswith("s
 
 
 @router.callback_query(second_answer_filter)
-async def get_question_answer(call: types.CallbackQuery, state: FSMContext):
-    data = await state.update_data()
-    c = data['c_two']
+async def get_question_answer(call: types.CallbackQuery):
     await send_result_or_continue(
-        counter=c, answer_emoji="❌", call=call, state=state, opponent=True, counter_key="c_two"
+        answer_emoji="❌", call=call, opponent=True
     )

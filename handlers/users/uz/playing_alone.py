@@ -2,7 +2,6 @@ import random
 from datetime import datetime
 
 from aiogram import Router, F, types
-from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.users.uz.battle_main import result_time_game
@@ -49,13 +48,15 @@ async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     )
 
 
-async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answer_emoji,
-                                        counter_key, state: FSMContext):
+async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji):
     telegram_id = call.from_user.id
     book_id = int(call.data.split(":")[2])
     book_name = await db.select_book_by_id(id_=book_id)
-
-    if counter == 10:
+    counter_db = await db.select_user_counter(
+        telegram_id=telegram_id, battle_id=0
+    )
+    counter = counter_db['counter']
+    if counter >= 10:
         await db.add_answer_to_temporary(
             telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON"
         )
@@ -65,10 +66,10 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         # User o'yinni tugatgan vaqtni DBga yozish
         end_time = datetime.now()
         await db.end_answer_to_temporary(
-            telegram_id=telegram_id, battle_id=0, answer="END_TIME", end_time=end_time
+            telegram_id=telegram_id, battle_id=0, game_status="OFF", end_time=end_time
         )
         start_time = await db.select_start_time(
-            telegram_id=telegram_id
+            telegram_id=telegram_id, battle_id=0
         )
         # O'yin boshlangan va tugagan vaqtni hisoblash
         difference = await result_time_game(
@@ -124,26 +125,34 @@ async def send_alone_result_or_continue(counter, call: types.CallbackQuery, answ
         await db.delete_from_temporary(
             telegram_id=telegram_id
         )
+        # Counter jadvalidan user ma'lumotlarini tozalash
+        await db.delete_from_counter(
+            telegram_id=telegram_id
+        )
     else:
         await db.add_answer_to_temporary(
             telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON"
         )
-        counter += 1
+        counter = counter_db['counter'] + 1
         await generate_question_alone(
             book_id=book_id, call=call, counter=counter
         )
-        await state.update_data(
-            {counter_key: counter}
+        await db.update_counter(
+            counter=1, battle_id=0, telegram_id=telegram_id
         )
 
 
 @router.callback_query(F.data.startswith("alone:"))
-async def alone_first(call: types.CallbackQuery, state: FSMContext):
+async def alone_first(call: types.CallbackQuery):
     book_id = int(call.data.split(":")[1])
     telegram_id = call.from_user.id
     c = 1
     await generate_question_alone(
         book_id=book_id, call=call, counter=c
+    )
+    # Counter jadvaliga savol tartib raqamini kiritish
+    await db.add_to_counter(
+        telegram_id=telegram_id, battle_id=0, counter=c
     )
     # Userni Results jadvalida bor yo'qligini tekshirish
     check_in_results = await db.select_user_in_results(
@@ -158,22 +167,17 @@ async def alone_first(call: types.CallbackQuery, state: FSMContext):
     await db.edit_status_users(
         game_on=True, telegram_id=telegram_id
     )
-    await state.update_data(
-        c_alone=c
-    )
+
     start_time = datetime.now()
     await db.start_time_to_temporary(
-        telegram_id=telegram_id, battle_id=0, answer="START_TIME", start_time=start_time
+        telegram_id=telegram_id, battle_id=0, game_status="ON", start_time=start_time
     )
 
 
 @router.callback_query(F.data.startswith("al_question:a"))
-async def alone_second(call: types.CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    c = data['c_alone']
-
+async def alone_second(call: types.CallbackQuery):
     await send_alone_result_or_continue(
-        counter=c, call=call, answer_emoji="✅", counter_key="c_alone", state=state
+        call=call, answer_emoji="✅"
     )
 
 
@@ -182,10 +186,7 @@ magic_alone = (F.data.startswith("al_question:b") | F.data.startswith("al_questi
 
 
 @router.callback_query(magic_alone)
-async def alone_third(call: types.CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    c = data['c_alone']
-
+async def alone_third(call: types.CallbackQuery):
     await send_alone_result_or_continue(
-        counter=c, call=call, answer_emoji="❌", counter_key="c_alone", state=state
+        call=call, answer_emoji="❌"
     )
