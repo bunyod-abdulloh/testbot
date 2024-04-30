@@ -289,3 +289,35 @@ class Database:
 
     async def drop_table_temporary(self):
         await self.execute(f"DROP TABLE temporary", execute=True)
+
+    # ===================== TABLE | COUNTER =================
+
+    async def create_table_counter(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS Counter (        
+        telegram_id BIGINT NULL,            
+        battle_id INT NULL,
+        counter INT DEFAULT 0                                 
+        );
+        """
+        await self.execute(sql, execute=True)
+
+    async def add_to_counter(self, telegram_id, battle_id, counter):
+        sql = (f"INSERT INTO Counter (telegram_id, battle_id, counter) "
+               f"VALUES('{telegram_id}', '{battle_id}', '{counter}')")
+        return await self.execute(sql, fetchrow=True)
+
+    async def update_counter(self, counter, telegram_id, battle_id):
+        sql = (f"UPDATE Counter SET counter='{counter}' WHERE telegram_id='{telegram_id}' AND "
+               f"battle_id='{battle_id}'")
+        return await self.execute(sql, execute=True)
+
+    async def select_user_counter(self, telegram_id, battle_id):
+        sql = f"SELECT * FROM Counter WHERE telegram_id='{telegram_id}' AND battle_id='{battle_id}"
+        return await self.execute(sql, fetch=True)
+
+    async def delete_from_counter(self, telegram_id):
+        await self.execute(f"DELETE FROM Counter WHERE telegram_id='{telegram_id}'", execute=True)
+
+    async def drop_table_counter(self):
+        await self.execute(f"DROP TABLE Counter", execute=True)
