@@ -1,7 +1,7 @@
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 
-from handlers.users.uz.start import uz_start_buttons
+from handlers.users.start import uz_start_buttons
 from keyboards.inline.buttons import to_offer_ibuttons, bot_offer_ibuttons
 from keyboards.reply.main_reply import rival_offer_cbutton
 from loader import db, bot

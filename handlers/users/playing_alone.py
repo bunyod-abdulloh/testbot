@@ -4,8 +4,8 @@ from datetime import datetime
 from aiogram import Router, F, types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from handlers.users.uz.battle_main import result_time_game
-from handlers.users.uz.random_first import first_text
+from handlers.users.battle_main import result_time_game
+from handlers.users.random_first import first_text
 from loader import db
 
 router = Router()

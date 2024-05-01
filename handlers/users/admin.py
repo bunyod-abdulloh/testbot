@@ -86,6 +86,23 @@ async def download_and_save_file(file_id: str, save_path: str):
 
 @router.message(IsBotAdminFilter(ADMINS), Command("admins"))
 async def admins_main(message: types.Message):
+    telegram_id = message.from_user.id
+    # Users jadvalidan game_on ustunini FALSE holatiga tushirish
+    await db.edit_status_users(
+        game_on=False, telegram_id=telegram_id
+    )
+    # Results jadvalidan user ma'lumotlarini tozalash
+    await db.delete_from_results(
+        telegram_id=telegram_id
+    )
+    # Temporary answers jadvalidan user ma'lumotlarini tozalash
+    await db.delete_from_temporary(
+        telegram_id=telegram_id
+    )
+    # Counter jadvalidan hisoblagichni tozalash
+    await db.delete_from_counter(
+        telegram_id=telegram_id
+    )
     buttons = types.ReplyKeyboardMarkup(
         keyboard=[
             [

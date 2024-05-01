@@ -1,6 +1,6 @@
 from aiogram import Router, F, types
 
-from handlers.users.uz.start import uz_start_buttons
+from handlers.users.start import uz_start_buttons
 from keyboards.inline.buttons import battle_ibuttons, battle_main_ibuttons
 from loader import db
 
@@ -16,6 +16,20 @@ async def result_time_game(start_time, end_time):
     return difference
 
 
+# @router.message(F.poll)
+# async def m_mes(message: types.Message):
+#     # print(message.poll)
+#     question = message.poll.question.split("\n\n")[0]
+#     a = message.poll.options[0].text
+#     b = message.poll.options[1].text
+#     c = message.poll.options[2].text
+#     d = "Bilmayman"
+#     await db.add_question(
+#         table_name="table_3", question=question, a_correct=a, b=b, c=c, d=d
+#     )
+#     print("qo'shildi!")
+
+
 @router.message(F.text == "⚔️ Bellashuv")
 async def uz_battle_main(message: types.Message = None, call: types.CallbackQuery = None):
     telegram_id = str()
@@ -28,14 +42,16 @@ async def uz_battle_main(message: types.Message = None, call: types.CallbackQuer
     await db.edit_status_users(
         game_on=False, telegram_id=telegram_id
     )
-
     # Results jadvalidan user ma'lumotlarini tozalash
     await db.delete_from_results(
         telegram_id=telegram_id
     )
-
     # Temporary answers jadvalidan user ma'lumotlarini tozalash
     await db.delete_from_temporary(
+        telegram_id=telegram_id
+    )
+    # Counter jadvalidan hisoblagichni tozalash
+    await db.delete_from_counter(
         telegram_id=telegram_id
     )
     if message:

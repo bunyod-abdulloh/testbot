@@ -4,7 +4,7 @@ from datetime import datetime
 from aiogram import Router, F, types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from handlers.users.uz.battle_main import result_time_game
+from handlers.users.battle_main import result_time_game
 from keyboards.inline.buttons import to_offer_ibuttons, StartPlayingCallback
 from loader import db, bot
 

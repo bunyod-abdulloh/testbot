@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from aiogram import types, Router, F
-from handlers.users.uz.random_first import send_result_or_continue, generate_question
+from handlers.users.random_first import send_result_or_continue, generate_question
 from keyboards.inline.buttons import OfferCallback, play_battle_ibuttons
 from loader import db, bot
 

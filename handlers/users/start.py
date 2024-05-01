@@ -21,13 +21,6 @@ uz_check_buttons = check_user_ibuttons(
 )
 
 
-def format_timedelta(td):
-    hours, remainder = divmod(td.seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    milliseconds = td.microseconds // 1000
-    return f"{hours:02}:{minutes:02}:{seconds:02}.{milliseconds:03}"
-
-
 @router.message(CommandStart())
 async def do_start(message: types.Message, state: FSMContext):
     await state.clear()
@@ -40,14 +33,16 @@ async def do_start(message: types.Message, state: FSMContext):
     await db.edit_status_users(
         game_on=False, telegram_id=telegram_id
     )
-
     # Results jadvalidan user ma'lumotlarini tozalash
     await db.delete_from_results(
         telegram_id=telegram_id
     )
-
     # Temporary answers jadvalidan user ma'lumotlarini tozalash
     await db.delete_from_temporary(
+        telegram_id=telegram_id
+    )
+    # Counter jadvalidan hisoblagichni tozalash
+    await db.delete_from_counter(
         telegram_id=telegram_id
     )
     try:
