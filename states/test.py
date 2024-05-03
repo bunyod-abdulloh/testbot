@@ -10,3 +10,8 @@ class AdminState(StatesGroup):
     add_data_to_db = State()
     add_book_to_db = State()
     add_question_one = State()
+
+
+class GetTest(StatesGroup):
+    one = State()
+    two = State()

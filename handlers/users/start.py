@@ -9,7 +9,7 @@ from keyboards.inline.buttons import check_user_ibuttons
 from keyboards.reply.main_reply import main_button
 from loader import db, bot
 from data.config import ADMINS, GROUP_ID
-
+from states.test import GetTest
 
 router = Router()
 uz_start_buttons = main_button(
@@ -112,3 +112,19 @@ async def leave_member(event: types.ChatMemberUpdated):
             )
         except Exception:
             pass
+
+
+@router.message(F.text == "test")
+async def get_test_one(message: types.Message, state: FSMContext):
+    await message.answer(
+        text="Test matnini yuboring"
+    )
+    await state.set_state(GetTest.one)
+
+
+@router.message(GetTest.one)
+async def get_test_two(message: types.Message, state: FSMContext):
+    print(message.text)
+    test = [message.text]
+    print(test)
+
