@@ -23,10 +23,14 @@ uz_check_buttons = check_user_ibuttons(
 
 
 @router.message(CommandStart())
-async def do_start(message: types.Message, state: FSMContext):
+async def main_start(message: types.Message, state: FSMContext):
+    # await db.delete_table(
+    #     table_name="table_4"
+    # )
     await state.clear()
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name
+    print(full_name)
     check_from_db = await db.select_user(
         telegram_id=telegram_id
     )
@@ -118,18 +122,36 @@ async def leave_member(event: types.ChatMemberUpdated):
 @router.message(F.text == "test")
 async def get_test_one(message: types.Message, state: FSMContext):
     await message.answer(
-        text="Test matnini yuboring"
+        text="Test javoblarini yuboring"
     )
     await state.set_state(GetTest.one)
 
 
 @router.message(GetTest.one)
-async def get_test_two(message: types.Message):
-    test = [message.text]
-    await test_qoshish(
-        savollar=test, kitob_nomi="table_4"
+async def get_test_two(message: types.Message, state: FSMContext):
+
+    test_javoblari = [message.text]
+
+    await state.update_data(
+        test_javoblari=test_javoblari
     )
     await message.answer(
-        text="Testlar qabul qilindi!"
+        text="Javoblar qabul qilindi! Test savollarini yuboring"
     )
+    await state.set_state(GetTest.two)
+
+
+@router.message(GetTest.two)
+async def get_test_three(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    test_savollari = [message.text]
+    test_javoblari = data.get('test_javoblari')
+
+    add_and_count = await test_qoshish(
+        savollar=test_savollari, kitob_nomi="table_4", kalit_javoblar=test_javoblari
+    )
+    await message.answer(
+        text=f"Jami {add_and_count} ta test savollari qabul qilindi!"
+    )
+    await state.clear()
 

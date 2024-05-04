@@ -18,18 +18,28 @@ from loader import db
 # pdf_path = "Test Master.pdf"
 # extracted_text = extract_text_from_pdf(pdf_path)
 # test.append(extracted_text)
+# List of questions and options
+mevalar = ["1. Olma", "2. Gilos", "30. Behi", "320. O'rik", "5. Uzum"]
 
 
-javobs = ["1-A 2-B 3-C 4-C 5-A 6-C 7-D 8-A\n9-A 10-C 11-D 12-C 13-A 14-C 15-A 16-C\n17-D 18-C 19-C 20-B 21-C 22-C 23-C "
-          "24-C\n25-C 26-C 27-C 28-C 29-C 30-C 31-A 32-B\n33-C 34-D 35-B 36-A 37-B 38-A 39-B 40-B\n41-A 42-B 43-A 44-A"]
-
+def raqamni_ochir(matn):
+    if matn[2].isdigit() and matn[3] == '.':
+        matn = matn[5:]
+    if matn[1].isdigit() and matn[2] == '.':
+        matn = matn[4:]
+    if matn[0].isdigit() and matn[1] == '.':
+        matn = matn[3:]
+    return matn
 
 
 async def test_qoshish(savollar: list, kitob_nomi: str, kalit_javoblar: list):
     savol = savollar[0].replace("\nB)", " B)").replace("\nC)", " C)").replace("\nD)", " D)").replace('”\n“', '" "')
     tayyor_savollar = savol.split("\n")
 
-    savollar = [question for i, question in enumerate(tayyor_savollar) if i % 2 == 0]
+    savollar_ = [question for i, question in enumerate(tayyor_savollar) if i % 2 == 0]
+    raqamsiz_savollar = []
+    for n in savollar_:
+        raqamsiz_savollar.append(raqamni_ochir(n))
 
     javoblar = [question for i, question in enumerate(tayyor_savollar) if i % 2 == 1]
 
@@ -44,12 +54,13 @@ async def test_qoshish(savollar: list, kitob_nomi: str, kalit_javoblar: list):
         togri_javoblar.append(letter)
 
     savol_javob = []
-    for savol, togri_javob, variantlar in zip(savollar, togri_javoblar, javoblar):
+    for savol, togri_javob, variantlar in zip(raqamsiz_savollar, togri_javoblar, javoblar):
         savol_javob.append((savol, togri_javob, variantlar))
 
     count = 0
 
     for savol, togri_javob, variantlar in savol_javob:
+        count += 1
         if togri_javob == "A":
             a_ = variantlar.split("A)")
             t_javob = a_[1].split("B)")[0].lstrip()
@@ -71,7 +82,11 @@ async def test_qoshish(savollar: list, kitob_nomi: str, kalit_javoblar: list):
             c_ = variantlar.split("C)")
             c = c_[1].split("D)")[0].lstrip()
             d = variantlar.split("D)")[1].lstrip()
-        #
+            await db.add_question(
+                table_name=kitob_nomi, question=savol,
+                a_correct=t_javob, b=a, c=c, d=d
+            )
+
         if togri_javob == "C":
             a_ = variantlar.split("A)")
             a = a_[1].split("B)")[0].lstrip()
@@ -79,7 +94,11 @@ async def test_qoshish(savollar: list, kitob_nomi: str, kalit_javoblar: list):
             b = b_[1].split("C)")[0].lstrip()
             c_ = variantlar.split("C)")
             t_javob = c_[1].split("D)")[0].lstrip()
-            d = variantlar.split("D)")[0].lstrip()
+            d = variantlar.split("D)")[1].lstrip()
+            await db.add_question(
+                table_name=kitob_nomi, question=savol,
+                a_correct=t_javob, b=b, c=a, d=d
+            )
 
         if togri_javob == "D":
             a_ = variantlar.split("A)")
@@ -89,3 +108,8 @@ async def test_qoshish(savollar: list, kitob_nomi: str, kalit_javoblar: list):
             c_ = variantlar.split("C)")
             c = c_[1].split("D)")[0].lstrip()
             t_javob = variantlar.split("D)")[1].lstrip()
+            await db.add_question(
+                table_name=kitob_nomi, question=savol,
+                a_correct=t_javob, b=b, c=c, d=a
+            )
+    return count
