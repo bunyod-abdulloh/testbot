@@ -5,6 +5,7 @@ from aiogram.filters import CommandStart, ChatMemberUpdatedFilter, IS_MEMBER, IS
 from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.fsm.context import FSMContext
 
+from handlers.sampler import test_qoshish
 from keyboards.inline.buttons import check_user_ibuttons
 from keyboards.reply.main_reply import main_button
 from loader import db, bot
@@ -123,8 +124,12 @@ async def get_test_one(message: types.Message, state: FSMContext):
 
 
 @router.message(GetTest.one)
-async def get_test_two(message: types.Message, state: FSMContext):
-    print(message.text)
+async def get_test_two(message: types.Message):
     test = [message.text]
-    print(test)
+    await test_qoshish(
+        savollar=test, kitob_nomi="table_4"
+    )
+    await message.answer(
+        text="Testlar qabul qilindi!"
+    )
 
