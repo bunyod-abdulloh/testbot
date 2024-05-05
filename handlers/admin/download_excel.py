@@ -1,30 +1,25 @@
-import logging
-import asyncio
-import os
-
-import pandas as pd
 from aiogram import Router, types, F
-from aiogram.filters import Command
 
-from loader import db, bot
-from states.test import AdminState, GetTest
+
+from loader import db
 from filters.admin import IsBotAdminFilter
 from data.config import ADMINS
 from utils.pgtoexcel import export_to_excel
-
-# from utils.pgtoexcel import export_to_excel
 
 router = Router()
 
 admin = int(ADMINS[0])
 
 
-@router.message(Command('allusers'), IsBotAdminFilter(ADMINS))
+@router.message(F.text == 'Excel yuklash', IsBotAdminFilter(ADMINS))
 async def get_all_users(message: types.Message):
-    users = await db.select_all_users()
+    all_questions = await db.select_all_questions_(
+        table_name="table_4"
+    )
 
-    file_path = f"data/users_list.xlsx"
-    await export_to_excel(data=users, headings=['ID', 'Full Name', 'Username', 'Telegram ID'], filepath=file_path)
+    file_path = f"downloads/documents/all_questions.xlsx"
+    await export_to_excel(data=all_questions, headings=['Test Master | Elementary', 'A | CORRECT', 'B', 'C', 'D'],
+                          filepath=file_path)
 
     await message.answer_document(types.input_file.FSInputFile(file_path))
 

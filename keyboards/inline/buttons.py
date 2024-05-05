@@ -32,11 +32,14 @@ async def battle_main_ibuttons(back_text: str, back_callback: str):
     builder = InlineKeyboardBuilder()
 
     for book in all_books:
-        builder.add(
-            InlineKeyboardButton(
-                text=f"{book['table_name']}", callback_data=f"table_{book['id']}"
+        if not book['questions']:
+            pass
+        else:
+            builder.add(
+                InlineKeyboardButton(
+                    text=f"{book['table_name']}", callback_data=f"table_{book['id']}"
+                )
             )
-        )
     builder.add(
         InlineKeyboardButton(text=f"⬅️ {back_text}", callback_data=f"{back_callback}")
     )

@@ -162,7 +162,8 @@ class Database:
         sql = """
         CREATE TABLE IF NOT EXISTS Tables (
         id SERIAL PRIMARY KEY,
-        table_name VARCHAR(255) NULL                 
+        table_name VARCHAR(255) NULL,
+        questions BOOLEAN DEFAULT FALSE                  
         );
         """
         await self.execute(sql, execute=True)
@@ -178,6 +179,10 @@ class Database:
     async def select_book_by_id(self, id_):
         sql = f"SELECT * FROM Tables WHERE id=$1"
         return await self.execute(sql, id_, fetchrow=True)
+
+    async def update_book_name(self, new_name, book_id):
+        sql = f"UPDATE Tables SET table_name='{new_name}' WHERE id='{book_id}'"
+        return await self.execute(sql, execute=True)
 
     async def delete_book_by_id(self, id_):
         await self.execute(f"DELETE FROM Tables WHERE table_name=$1", id_, execute=True)
@@ -205,6 +210,10 @@ class Database:
 
     async def select_all_questions(self, table_name):
         sql = f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1"
+        return await self.execute(sql, fetch=True)
+
+    async def select_all_questions_(self, table_name):
+        sql = f"SELECT question, a_correct, b, c, d FROM {table_name}"
         return await self.execute(sql, fetch=True)
 
     async def delete_table(self, table_name):

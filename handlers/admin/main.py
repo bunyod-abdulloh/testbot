@@ -29,7 +29,7 @@ async def test_qoshish(savollar: list, kitob_nomi: str, kalit_javoblar: list):
             " \nA)", " A)").replace(" \nB)", " B)").replace(" \nC)", " C)").replace(" \nD)", " D)").replace(
             "\n B)", " B)").replace("\n C)", " C)").replace("\n D)", " D)")
         tayyor_savollar = savol.split("\n")
-        print(savollar)
+
         savollar_ = [question for i, question in enumerate(tayyor_savollar) if i % 2 == 0]
         raqamsiz_savollar = []
         for n in savollar_:

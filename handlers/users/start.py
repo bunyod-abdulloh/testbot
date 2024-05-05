@@ -22,9 +22,9 @@ uz_check_buttons = check_user_ibuttons(
 
 @router.message(CommandStart())
 async def main_start(message: types.Message, state: FSMContext):
-    await db.delete_table(
-        table_name="table_4"
-    )
+    # await db.delete_table(
+    #     table_name="table_4"
+    # )
     await state.clear()
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name

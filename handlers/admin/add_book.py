@@ -38,7 +38,7 @@ async def add_book_to_db(message: types.Message, state: FSMContext):
         await db.create_table_questions(table_name=f"Table_{add_to_table['id']}")
 
         await message.answer(
-            text=f"Kitob {book_name} qo'shildi"
+            text=f"Kitob {book_name} ma'lumotlar omboriga qo'shildi"
         )
         await state.clear()
     except Exception as err:
