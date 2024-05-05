@@ -5,12 +5,10 @@ from aiogram.filters import CommandStart, ChatMemberUpdatedFilter, IS_MEMBER, IS
 from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.fsm.context import FSMContext
 
-from handlers.sampler import test_qoshish
 from keyboards.inline.buttons import check_user_ibuttons
 from keyboards.reply.main_reply import main_button
 from loader import db, bot
 from data.config import ADMINS, GROUP_ID
-from states.test import GetTest
 
 router = Router()
 uz_start_buttons = main_button(
@@ -117,41 +115,3 @@ async def leave_member(event: types.ChatMemberUpdated):
             )
         except Exception:
             pass
-
-
-@router.message(F.text == "test")
-async def get_test_one(message: types.Message, state: FSMContext):
-    await message.answer(
-        text="Test javoblarini yuboring"
-    )
-    await state.set_state(GetTest.one)
-
-
-@router.message(GetTest.one)
-async def get_test_two(message: types.Message, state: FSMContext):
-
-    test_javoblari = [message.text]
-
-    await state.update_data(
-        test_javoblari=test_javoblari
-    )
-    await message.answer(
-        text="Javoblar qabul qilindi! Test savollarini yuboring"
-    )
-    await state.set_state(GetTest.two)
-
-
-@router.message(GetTest.two)
-async def get_test_three(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    test_savollari = [message.text]
-    test_javoblari = data.get('test_javoblari')
-
-    add_and_count = await test_qoshish(
-        savollar=test_savollari, kitob_nomi="table_4", kalit_javoblar=test_javoblari
-    )
-    await message.answer(
-        text=f"Jami {add_and_count} ta test savollari qabul qilindi!"
-    )
-    await state.clear()
-

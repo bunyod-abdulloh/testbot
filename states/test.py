@@ -7,6 +7,8 @@ class Test(StatesGroup):
 
 
 class AdminState(StatesGroup):
+    add_excel = State()
+    add_pdf = State()
     add_data_to_db = State()
     add_book_to_db = State()
     add_question_one = State()
