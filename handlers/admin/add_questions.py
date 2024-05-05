@@ -125,11 +125,11 @@ async def get_test_two(message: types.Message, state: FSMContext):
 async def get_test_three(message: types.Message, state: FSMContext):
     data = await state.get_data()
     test_savollari = [message.text]
-    kitob_nomi = data.get('book_name')
-    kalit_javoblar = data.get('test_javoblari')
+    kitob_id = data.get('book_id')
 
+    kalit_javoblar = data.get('test_javoblari')
     add_and_count = await test_qoshish(
-        savollar=test_savollari, kitob_nomi=kitob_nomi, kalit_javoblar=kalit_javoblar
+        savollar=test_savollari, kitob_nomi=f"table_{kitob_id}", kalit_javoblar=kalit_javoblar
     )
     await message.answer(
         text=f"Jami {add_and_count} ta test savollari qabul qilindi!"
