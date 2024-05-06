@@ -12,7 +12,6 @@ router = Router()
 
 
 def raqamni_ochir(matn):
-    print(matn)
     if matn[2].isdigit() and matn[3] == '.':
         matn = matn[5:]
     if matn[1].isdigit() and matn[2] == '.':
@@ -153,6 +152,12 @@ async def admins_main(message: types.Message):
             ],
             [
                 types.KeyboardButton(text="Kitob nomini o'zgartirish")
+            ],
+            [
+                types.KeyboardButton(text="Excel shaklda yuklab olish")
+            ],
+            [
+                types.KeyboardButton(text="Foydalanuvchilar bo'limi")
             ],
             [
                 types.KeyboardButton(text="🔙 Bosh sahifa")
