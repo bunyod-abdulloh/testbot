@@ -1,3 +1,6 @@
+import asyncio
+import logging
+
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 
@@ -53,35 +56,40 @@ async def admin_delete_users(message: types.Message):
     )
 
 
-@router.message(F.text == "✉️ Habar yuborish")
-async def admin_send_message(message: types.Message):
-    pass
-
-
 @router.message(F.text == "🔙 Ortga")
 async def back_admin_main(message: types.Message):
     pass
 
 
-@router.message(Command('reklama'), IsBotAdminFilter(ADMINS))
+@router.message(F.text == "✉️ Habar yuborish", IsBotAdminFilter(ADMINS))
 async def ask_ad_content(message: types.Message, state: FSMContext):
-    await message.answer("Reklama uchun post yuboring")
+    await message.answer("Habar uchun post yuboring")
     await state.set_state(AdminState.ask_ad_content)
 
 
 @router.message(AdminState.ask_ad_content, IsBotAdminFilter(ADMINS))
 async def send_ad_to_users(message: types.Message, state: FSMContext):
     users = await db.select_all_users()
-    count = 0
+    all_users = 0
+    active = 0
+    blocked = 0
     for user in users:
-        user_id = user[-1]
+        all_users += 1
+        user_id = user['telegram_id']
         try:
             await message.send_copy(chat_id=user_id)
-            count += 1
+            active += 1
             await asyncio.sleep(0.05)
         except Exception as error:
+            blocked += 1
+            await db.aktivlikni_yangila(
+                status=False, telegram_id=user_id
+            )
             logging.info(f"Ad did not send to user: {user_id}. Error: {error}")
-    await message.answer(text=f"Reklama {count} ta foydalauvchiga muvaffaqiyatli yuborildi.")
+    await message.answer(text=f"Habar {active} ta foydalauvchiga muvaffaqiyatli yuborildi."
+                              f"\n\nJami foydalanuvchilar soni: {all_users}"
+                              f"\nFaol foydalanuvchilar soni: {active}"
+                              f"\nNofaol foydalanuvchilar soni: {blocked}")
     await state.clear()
 
 
@@ -98,7 +106,7 @@ async def clean_db(call: types.CallbackQuery, state: FSMContext):
     msg_id = data.get('msg_id')
     text = str()
     if call.data == 'yes':
-        await db.delete_users()
+        await db.hamma_userlarni_ochir()
         text = "Baza tozalandi!"
     elif call.data == 'no':
         text = "Bekor qilindi."

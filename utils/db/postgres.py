@@ -82,6 +82,10 @@ class Database:
         sql = f"UPDATE Users SET status='{status}' WHERE telegram_id='{telegram_id}'"
         return await self.execute(sql, execute=True)
 
+    async def update_all_active(self):
+        sql = f"UPDATE Users SET status=TRUE"
+        return await self.execute(sql, execute=True)
+
     async def stop_game_users(self, telegram_id):
         sql = f"UPDATE Users SET game_on=False WHERE telegram_id='{telegram_id}'"
         return await self.execute(sql, execute=True)
@@ -96,6 +100,9 @@ class Database:
 
     async def nofaollarni_ochir(self):
         await self.execute(f"DELETE FROM Users WHERE status=FALSE", execute=True)
+
+    async def hamma_userlarni_ochir(self):
+        await self.execute(f"DELETE FROM Users", execute=True)
 
     async def drop_users(self):
         await self.execute("DROP TABLE Users", execute=True)
