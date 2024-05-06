@@ -11,7 +11,7 @@ router = Router()
 admin = int(ADMINS[0])
 
 
-@router.message(F.text == 'Excel shaklda yuklab olish', IsBotAdminFilter(ADMINS))
+@router.message(F.text == '📥 Excel shaklda yuklab olish', IsBotAdminFilter(ADMINS))
 async def get_all_users(message: types.Message):
     await message.answer(
         text="Kerakli kitobni tanlang", reply_markup=await books_menu(

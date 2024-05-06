@@ -21,7 +21,7 @@ async def download_and_save_file(file_id: str, save_path: str):
     return file_path
 
 
-@router.message(IsBotAdminFilter(ADMINS), F.text == "Kitob qo'shish")
+@router.message(IsBotAdminFilter(ADMINS), F.text == "➕ Kitob qo'shish")
 async def add_book(message: types.Message, state: FSMContext):
     await message.answer(
         text="Savollar beriladigan kitob nomini kiriting"

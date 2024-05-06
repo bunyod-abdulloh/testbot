@@ -8,7 +8,7 @@ from states import AdminState
 router = Router()
 
 
-@router.message(F.text == "Kitob nomini o'zgartirish")
+@router.message(F.text == "♻️ Kitob nomini o'zgartirish")
 async def admin_edit_book_name(message: types.Message):
     await message.answer(
         text="O'zgartirmoqchi bo'lgan kitobingizni tanlang",

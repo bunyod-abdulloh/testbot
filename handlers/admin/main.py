@@ -147,17 +147,17 @@ async def admins_main(message: types.Message):
     buttons = types.ReplyKeyboardMarkup(
         keyboard=[
             [
-                types.KeyboardButton(text="Kitob qo'shish"),
-                types.KeyboardButton(text="Savollar qo'shish")
+                types.KeyboardButton(text="➕ Kitob qo'shish"),
+                types.KeyboardButton(text="➕ Savollar qo'shish")
             ],
             [
-                types.KeyboardButton(text="Kitob nomini o'zgartirish")
+                types.KeyboardButton(text="♻️ Kitob nomini o'zgartirish")
             ],
             [
-                types.KeyboardButton(text="Excel shaklda yuklab olish")
+                types.KeyboardButton(text="📥 Excel shaklda yuklab olish")
             ],
             [
-                types.KeyboardButton(text="Foydalanuvchilar bo'limi")
+                types.KeyboardButton(text="👤 Foydalanuvchilar bo'limi")
             ],
             [
                 types.KeyboardButton(text="🔙 Bosh sahifa")
