@@ -6,6 +6,7 @@ from aiogram.utils import keyboard
 from data.config import ADMINS
 from filters import IsBotAdminFilter
 from handlers.users.start import uz_start_buttons
+from keyboards.reply.admin_buttons import admin_tugmalari
 from loader import db
 
 router = Router()
@@ -144,30 +145,8 @@ async def admins_main(message: types.Message):
     await db.delete_from_counter(
         telegram_id=telegram_id
     )
-    buttons = types.ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                types.KeyboardButton(text="➕ Kitob qo'shish"),
-                types.KeyboardButton(text="➕ Savollar qo'shish")
-            ],
-            [
-                types.KeyboardButton(text="♻️ Kitob nomini o'zgartirish"),
-                types.KeyboardButton(text="🆑 Kitob o'chirish")
-            ],
-            [
-                types.KeyboardButton(text="📥 Excel shaklda yuklab olish")
-            ],
-            [
-                types.KeyboardButton(text="👤 Foydalanuvchilar bo'limi")
-            ],
-            [
-                types.KeyboardButton(text="🔙 Bosh sahifa")
-            ]
-        ],
-        resize_keyboard=True
-    )
     await message.answer(
-        text="Kerakli bo'limni tanlang", reply_markup=buttons
+        text="Kerakli bo'limni tanlang", reply_markup=admin_tugmalari
     )
 
 

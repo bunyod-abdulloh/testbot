@@ -1,12 +1,13 @@
 import asyncio
-import logging
 
 from aiogram import Router, F, types
+from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.fsm.context import FSMContext
 
 from data.config import ADMINS
 from filters import IsBotAdminFilter
 from keyboards.inline.buttons import are_you_sure_markup
+from keyboards.reply.admin_buttons import admin_tugmalari
 from loader import db, bot
 from states import AdminState
 
@@ -24,6 +25,7 @@ async def admin_users_main(message: types.Message):
                 types.KeyboardButton(text="❌ Nofaol foydalanuvchilarni o'chirish")
             ],
             [
+                types.KeyboardButton(text="📁️ Foydalanuvchilar omborini tozalash"),
                 types.KeyboardButton(text="✉️ Habar yuborish")
             ],
             [
@@ -58,7 +60,9 @@ async def admin_delete_users(message: types.Message):
 
 @router.message(F.text == "🔙 Ortga")
 async def back_admin_main(message: types.Message):
-    pass
+    await message.answer(
+        text=message.text, reply_markup=admin_tugmalari
+    )
 
 
 @router.message(F.text == "✉️ Habar yuborish", IsBotAdminFilter(ADMINS))
@@ -85,7 +89,7 @@ async def send_ad_to_users(message: types.Message, state: FSMContext):
             await db.aktivlikni_yangila(
                 status=False, telegram_id=user_id
             )
-            logging.info(f"Ad did not send to user: {user_id}. Error: {error}")
+            logger.info(f"Ad did not send to user: {user_id}. Error: {error}")
     await message.answer(text=f"Habar {active} ta foydalauvchiga muvaffaqiyatli yuborildi."
                               f"\n\nJami foydalanuvchilar soni: {all_users}"
                               f"\nFaol foydalanuvchilar soni: {active}"
@@ -93,7 +97,7 @@ async def send_ad_to_users(message: types.Message, state: FSMContext):
     await state.clear()
 
 
-@router.message(Command('cleandb'), IsBotAdminFilter(ADMINS))
+@router.message(F.text == "📁️ Foydalanuvchilar omborini tozalash", IsBotAdminFilter(ADMINS))
 async def ask_are_you_sure(message: types.Message, state: FSMContext):
     msg = await message.reply("Haqiqatdan ham bazani tozalab yubormoqchimisiz?", reply_markup=are_you_sure_markup)
     await state.update_data(msg_id=msg.message_id)
