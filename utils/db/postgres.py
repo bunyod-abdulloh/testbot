@@ -51,7 +51,8 @@ class Database:
         id SERIAL PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,        
         telegram_id BIGINT NOT NULL,
-        game_on BOOLEAN DEFAULT FALSE              
+        game_on BOOLEAN DEFAULT FALSE,
+        status BOOLEAN DEFAULT TRUE              
         );
         """
         await self.execute(sql, execute=True)
@@ -77,6 +78,10 @@ class Database:
         sql = f"UPDATE Users SET game_on='{game_on}' WHERE telegram_id='{telegram_id}'"
         return await self.execute(sql, execute=True)
 
+    async def aktivlikni_yangila(self, status, telegram_id):
+        sql = f"UPDATE Users SET status='{status}' WHERE telegram_id='{telegram_id}'"
+        return await self.execute(sql, execute=True)
+
     async def stop_game_users(self, telegram_id):
         sql = f"UPDATE Users SET game_on=False WHERE telegram_id='{telegram_id}'"
         return await self.execute(sql, execute=True)
@@ -85,8 +90,12 @@ class Database:
         sql = "SELECT COUNT(*) FROM Users"
         return await self.execute(sql, fetchval=True)
 
-    async def delete_users(self):
-        await self.execute("DELETE FROM Users WHERE TRUE", execute=True)
+    async def nofaollarni_sana(self):
+        sql = "SELECT COUNT(*) FROM Users WHERE status=FALSE"
+        return await self.execute(sql, fetchval=True)
+
+    async def nofaollarni_ochir(self):
+        await self.execute(f"DELETE FROM Users WHERE status=FALSE", execute=True)
 
     async def drop_users(self):
         await self.execute("DROP TABLE Users", execute=True)

@@ -151,7 +151,8 @@ async def admins_main(message: types.Message):
                 types.KeyboardButton(text="➕ Savollar qo'shish")
             ],
             [
-                types.KeyboardButton(text="♻️ Kitob nomini o'zgartirish")
+                types.KeyboardButton(text="♻️ Kitob nomini o'zgartirish"),
+                types.KeyboardButton(text="🆑 Kitob o'chirish")
             ],
             [
                 types.KeyboardButton(text="📥 Excel shaklda yuklab olish")

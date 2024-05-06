@@ -112,3 +112,10 @@ def bot_offer_ibuttons(full_name: str, bot_link: str):
         ]
     )
     return markup
+
+
+inline_keyboard = [[
+    InlineKeyboardButton(text="✅ Yes", callback_data='yes'),
+    InlineKeyboardButton(text="❌ No", callback_data='no')
+]]
+are_you_sure_markup = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)

@@ -13,6 +13,7 @@ class AdminState(StatesGroup):
     add_book_to_db = State()
     add_question_one = State()
     edit_book = State()
+    are_you_sure = State()
 
 
 class GetTest(StatesGroup):
