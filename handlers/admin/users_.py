@@ -29,6 +29,9 @@ async def admin_users_main(message: types.Message):
                 types.KeyboardButton(text="✉️ Habar yuborish")
             ],
             [
+                types.KeyboardButton(text="😊 Barchani blockdan chiqarish")
+            ],
+            [
                 types.KeyboardButton(text="🔙 Ortga")
             ]
         ],
@@ -116,3 +119,12 @@ async def clean_db(call: types.CallbackQuery, state: FSMContext):
         text = "Bekor qilindi."
     await bot.edit_message_text(text=text, chat_id=call.message.chat.id, message_id=msg_id)
     await state.clear()
+
+
+@router.message(F.text == "😊 Barchani blockdan chiqarish")
+async def unblock_all_users(message: types.Message):
+    nofaollar_soni = await db.nofaollarni_sana()
+    await db.update_all_active()
+    await message.answer(
+        text=f"{nofaollar_soni} ta foydalanuvchilar blokdan chiqarildi!"
+    )

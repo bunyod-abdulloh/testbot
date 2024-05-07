@@ -27,6 +27,7 @@ async def edit_book(call: types.CallbackQuery, state: FSMContext):
     kitob_nomi = await db.select_book_by_id(
         id_=kitob_id
     )
+    print(kitob_nomi)
     await call.message.edit_text(
         text=f"Tanlangan kitob: {kitob_nomi['table_name']}"
              f"\n\nKitob uchun yangi nom kiriting"

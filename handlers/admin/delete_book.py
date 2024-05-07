@@ -19,9 +19,15 @@ async def admin_delete_book(message: types.Message):
 @router.callback_query(F.data.startswith("delete_book:"))
 async def delete_book(call: types.CallbackQuery):
     kitob_id = int(call.data.split(':')[1])
-    await db.delete_book_by_id(
-        id_=kitob_id
-    )
-    await call.message.edit_text(
-        text="Kitob o'chirildi"
-    )
+    try:
+        await db.delete_book_by_id(
+            id_=kitob_id
+        )
+        await call.message.edit_text(
+            text="Kitob o'chirildi"
+        )
+    except Exception as e:
+        await call.message.edit_text(
+            text=f"{e}"
+        )
+

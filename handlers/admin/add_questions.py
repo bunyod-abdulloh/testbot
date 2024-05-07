@@ -61,10 +61,7 @@ async def add_excel(call: types.CallbackQuery, state: FSMContext):
 async def download_document(message: types.Message, state: FSMContext):
     try:
         data = await state.get_data()
-        book_id = data['book_id']
-        book_name = await db.select_book_by_id(
-            id_=book_id
-        )
+        book_id = int(data['book_id'])
 
         file_path = await download_and_save_file(
             file_id=message.document.file_id, save_path="downloads/"
@@ -78,13 +75,16 @@ async def download_document(message: types.Message, state: FSMContext):
                 await asyncio.sleep(60)
 
             await db.add_question(
-                table_number=book_name[0],
+                table_name=f"table_{book_id}",
                 question=row[0],
                 a_correct=row[1],
                 b=row[2],
                 c=row[3],
                 d=row[4]
             )
+        await db.update_questions_status(
+            book_id=book_id
+        )
         await message.answer(
             text=f"Ma'lumotlar qabul qilindi!\n\nQabul qilingan savollar soni: {c} ta"
         )

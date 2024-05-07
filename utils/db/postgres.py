@@ -200,8 +200,12 @@ class Database:
         sql = f"UPDATE Tables SET table_name='{new_name}' WHERE id='{book_id}'"
         return await self.execute(sql, execute=True)
 
+    async def update_questions_status(self, book_id):
+        sql = f"UPDATE Tables SET questions=TRUE WHERE id='{book_id}'"
+        return await self.execute(sql, execute=True)
+
     async def delete_book_by_id(self, id_):
-        await self.execute(f"DELETE FROM Tables WHERE table_name=$1", id_, execute=True)
+        await self.execute(f"DELETE FROM Tables WHERE id=$1", id_, execute=True)
 
     async def drop_table_tables(self):
         await self.execute(f"DROP TABLE Tables", execute=True)
