@@ -22,3 +22,8 @@ from loader import db
 mevalar = ["1. Olma", "2. Gilos", "30. Behi", "320. O'rik", "5. Uzum"]
 
 
+a = ['a', 'b', 'c']
+b = ['1', '2', '3']
+
+c = zip(a, b)
+print(c)

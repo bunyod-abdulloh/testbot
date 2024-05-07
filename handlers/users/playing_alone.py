@@ -54,7 +54,6 @@ async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji)
     book_id = int(call.data.split(":")[2])
     question_id = int(call.data.split(":")[3])
     get_question = await db.select_question_by_id(table_name=f"table_{book_id}", id_=question_id)
-
     book_name = await db.select_book_by_id(id_=book_id)
     counter_db = await db.select_user_counter(
         telegram_id=telegram_id, battle_id=0
@@ -121,10 +120,9 @@ async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji)
                 all_rating_ += index + 1
                 all_points += result['result']
                 break
-        f_text = first_text(
+        f_text = await first_text(
             book_name=book_name['table_name'], result_text="Sizning natijangiz", correct_answers=correct_answers,
-            wrong_answers=wrong_answers, time=difference, book_points=book_points, book_rating=rating_book_,
-            all_points=all_points, all_rating=all_rating_
+            wrong_answers=wrong_answers, time=difference, book_points=book_points, battle_id=0, telegram_id=telegram_id
         )
         await call.message.edit_text(
             text=f_text
@@ -132,14 +130,14 @@ async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji)
         await db.edit_status_users(
             game_on=False, telegram_id=telegram_id
         )
-        # Natijani Temporary jadvalidan tozalash
-        await db.delete_from_temporary(
-            telegram_id=telegram_id
-        )
-        # Counter jadvalidan user ma'lumotlarini tozalash
-        await db.delete_from_counter(
-            telegram_id=telegram_id
-        )
+        # # Natijani Temporary jadvalidan tozalash
+        # await db.delete_from_temporary(
+        #     telegram_id=telegram_id
+        # )
+        # # Counter jadvalidan user ma'lumotlarini tozalash
+        # await db.delete_from_counter(
+        #     telegram_id=telegram_id
+        # )
     else:
         if variant == "a":
             await db.add_answer_to_temporary(

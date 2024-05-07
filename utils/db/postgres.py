@@ -298,9 +298,9 @@ class Database:
                f"AND end_time IS NOT NULL")
         return await self.execute(sql, fetch=True)
 
-    async def select_user_from_temporary(self, battle_id, telegram_id):
-        sql = (f"SELECT * FROM temporary WHERE battle_id='{battle_id}' AND telegram_id='{telegram_id} "
-               f"AND time_result IS NOT NULL")
+    async def select_answers_temporary(self, battle_id, telegram_id):
+        sql = (f"SELECT * FROM temporary WHERE battle_id='{battle_id}' AND telegram_id='{telegram_id}' "
+               f"AND question_number IS NOT NULL")
         return await self.execute(sql, fetch=True)
 
     async def update_all_game_status(self, game_status, telegram_id, battle_id):

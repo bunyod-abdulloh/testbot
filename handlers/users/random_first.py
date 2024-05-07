@@ -56,16 +56,25 @@ async def generate_question(book_id, counter, call: types.CallbackQuery, battle_
     )
 
 
-def first_text(book_name, result_text, correct_answers, wrong_answers, time,
-               book_points, book_rating, all_points, all_rating):
+async def first_text(telegram_id, battle_id, book_name, result_text, correct_answers, wrong_answers, time, book_points):
+    answers = await db.select_answers_temporary(
+        battle_id=battle_id, telegram_id=telegram_id
+    )
+    numbers = ["1️⃣", "2️", "3️", "4️", "5️", "6️", "7️", "8️", "9️", "🔟️"]
+    num_answers = list(zip(numbers, answers))
+    print(num_answers)
+    result = None
+    number_ = None
+    answer_ = None
+    for number, answer in answers:
+        number_ += f"{number} "
+        answer_ += f"{answer} "
     text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
             f"\n\n<i><b>Savollar soni:</b> 10 ta</i>\n\n😊 <i><b><u>{result_text}:</u></b></i>"
             f"\n\n✅: <i><u>{correct_answers} ta</u> |</i> ❌: <i><u>{wrong_answers} ta</u> |</i> | "
             f"💎: <i><u>{book_points} ball</u></i>"
             f"\n⏳: <i><u>{time}</u></i>"            
-            f"\n\n📖 <i><b>Kitob bo'yicha reyting:</b> {book_rating} - o'rin</i>"
-            f"\n\n📥 <i><b>Umumiy ball:</b> {all_points} ball</i>"
-            f"\n\n📚 <i><b>Umumiy reyting:</b> {all_rating} - o'rin</i>")
+            )
     return text
 
 
@@ -165,11 +174,11 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, oppon
                 first_all_rating += index + 1
                 first_all_points += result['result']
                 break
-        f_text = first_text(
+        f_text = await first_text(
             book_name=book_name['table_name'], result_text="Sizning natijangiz",
             correct_answers=first_correct_answers, wrong_answers=first_wrong_answers, time=difference,
-            book_rating=first_rating_book_, all_rating=first_all_rating, book_points=first_points,
-            all_points=first_all_points
+            book_points=first_points, battle_id=0, telegram_id=first_telegram_id
+
         )
         if not second_battler or second_battler[0]['game_status'] == "ON":
             if not second_battler:
@@ -247,7 +256,7 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, oppon
             f_difference = await result_time_game(
                 start_time=f_start_time[0]['start_time'], end_time=f_end_time
             )
-            f_text = first_text(
+            f_text = await first_text(
                 book_name=book_name['table_name'], result_text="Sizning natijangiz",
                 correct_answers=first_correct_answers, wrong_answers=first_wrong_answers, time=f_difference,
                 book_rating=first_rating_book_, all_rating=first_all_rating, book_points=first_points,
@@ -257,7 +266,7 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, oppon
                 text=f"{f_text}\n\n{s_text}"
             )
             # Ikkinchi o'yinchiga ikkala natijani yuborish
-            s_text_bot = first_text(
+            s_text_bot = await first_text(
                 book_name=book_name['table_name'], result_text="Sizning natijaningiz",
                 correct_answers=second_correct_answers, wrong_answers=second_wrong_answers, time=difference_,
                 book_points=second_points, book_rating=second_rating_book, all_points=second_all_points,
