@@ -60,9 +60,9 @@ def first_text(book_name, result_text, correct_answers, wrong_answers, time,
                book_points, book_rating, all_points, all_rating):
     text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
             f"\n\n<i><b>Savollar soni:</b> 10 ta</i>\n\n😊 <i><b><u>{result_text}:</u></b></i>"
-            f"\n\n✅: <i><u>{correct_answers} ta</u> |</i> ❌: <i><u>{wrong_answers} ta</u> |</i> "
-            f"⏳: <i><u>{time}</u></i>"            
-            f"\n\n💎 <i><b>Kitob bo'yicha to'plangan ball:</b> {book_points} ball</i>"
+            f"\n\n✅: <i><u>{correct_answers} ta</u> |</i> ❌: <i><u>{wrong_answers} ta</u> |</i> | "
+            f"💎: <i><u>{book_points} ball</u></i>"
+            f"\n⏳: <i><u>{time}</u></i>"            
             f"\n\n📖 <i><b>Kitob bo'yicha reyting:</b> {book_rating} - o'rin</i>"
             f"\n\n📥 <i><b>Umumiy ball:</b> {all_points} ball</i>"
             f"\n\n📚 <i><b>Umumiy reyting:</b> {all_rating} - o'rin</i>")
@@ -86,18 +86,25 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, oppon
     book_id = int(call.data.split(":")[2])
     battle_id = int(call.data.split(":")[3])
     question_id = int(call.data.split(":")[4])
+    get_question = await db.select_question_by_id(table_name=f"table_{book_id}", id_=question_id)
     book_name = await db.select_book_by_id(
         id_=book_id
     )
 
     counter_db = await db.select_user_counter(
         telegram_id=first_telegram_id, battle_id=battle_id
-    )
-    if counter_db['counter'] >= 10:
-        await db.add_answer_to_temporary(
-            telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter_db['counter'],
-            answer=answer_emoji, game_status="ON"
-        )
+    )['counter']
+    if counter_db >= 10:
+        if variant == "a":
+            await db.add_answer_to_temporary(
+                telegram_id=first_telegram_id, battle_id=0, question_number=counter_db,
+                answer=answer_emoji, game_status="ON", question=None, correct_answer=None
+            )
+        else:
+            await db.add_answer_to_temporary(
+                telegram_id=first_telegram_id, battle_id=0, question_number=counter_db, answer=answer_emoji,
+                game_status="ON", question=get_question['question'], correct_answer=get_question['a_correct']
+            )
         await db.update_all_game_status(
             game_status="OVER", telegram_id=first_telegram_id, battle_id=battle_id
         )
