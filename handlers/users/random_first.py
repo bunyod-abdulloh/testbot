@@ -13,13 +13,13 @@ router = Router()
 
 async def generate_question(book_id, counter, call: types.CallbackQuery, battle_id, opponent=False):
     questions = await db.select_all_questions(table_name=f"table_{book_id}")
-
+    question_id = questions[0]['id']
     letters = ["A", "B", "C", "D"]
 
-    a = ["a", f"{questions[0][2]}"]
-    b = ["b", f"{questions[0][3]}"]
-    c = ["c", f"{questions[0][4]}"]
-    d = ["d", f"{questions[0][5]}"]
+    a = ["a", f"{questions[0]['a_correct']}"]
+    b = ["b", f"{questions[0]['b']}"]
+    c = ["c", f"{questions[0]['c']}"]
+    d = ["d", f"{questions[0]['d']}"]
 
     answers = [a, b, c, d]
 
@@ -37,7 +37,7 @@ async def generate_question(book_id, counter, call: types.CallbackQuery, battle_
         for letter, callback in answers_dict.items():
             builder.add(
                 types.InlineKeyboardButton(
-                    text=f"{letter}", callback_data=f"s_question:{callback[0]}:{book_id}:{battle_id}"
+                    text=f"{letter}", callback_data=f"s_question:{callback[0]}:{book_id}:{battle_id}:{question_id}"
                 )
             )
     else:
@@ -82,11 +82,14 @@ def second_text(correct_answers, result_text, wrong_answers, time, book_points, 
 
 async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, opponent=False):
     first_telegram_id = call.from_user.id
+    variant = call.data.split(":")[1]
     book_id = int(call.data.split(":")[2])
+    battle_id = int(call.data.split(":")[3])
+    question_id = int(call.data.split(":")[4])
     book_name = await db.select_book_by_id(
         id_=book_id
     )
-    battle_id = int(call.data.split(":")[3])
+
     counter_db = await db.select_user_counter(
         telegram_id=first_telegram_id, battle_id=battle_id
     )

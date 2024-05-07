@@ -1,4 +1,5 @@
 from aiogram import Router, types, F
+from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.utils import keyboard
@@ -108,7 +109,7 @@ async def test_qoshish(savollar: list, kitob_nomi: str, kalit_javoblar: list):
                 )
         return count
     except Exception as e:
-        print(e)
+        logger.info(e)
 
 
 async def books_menu(callback_text):

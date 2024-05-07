@@ -204,11 +204,12 @@ class Database:
         sql = f"UPDATE Tables SET questions=TRUE WHERE id='{book_id}'"
         return await self.execute(sql, execute=True)
 
-    async def delete_book_by_id(self, id_):
-        await self.execute(f"DELETE FROM Tables WHERE id=$1", id_, execute=True)
-
     async def drop_table_tables(self):
         await self.execute(f"DROP TABLE Tables", execute=True)
+
+    # ===================== TABLE | ALL =================
+    async def drop_table_book(self, table_name):
+        await self.execute(f"DROP TABLE {table_name}", execute=True)
 
     # ===================== TABLE | QUESTIONS =================
     async def create_table_questions(self, table_name: str):
@@ -236,6 +237,10 @@ class Database:
         sql = f"SELECT question, a_correct, b, c, d FROM {table_name}"
         return await self.execute(sql, fetch=True)
 
+    async def select_question_by_id(self, table_name, id_):
+        sql = f"SELECT question, a_correct FROM {table_name} WHERE id=$1"
+        return await self.execute(sql, id_, fetchrow=True)
+
     async def delete_table(self, table_name):
         await self.execute(f"DELETE FROM {table_name}", execute=True)
 
@@ -253,7 +258,9 @@ class Database:
         answer TEXT DEFAULT '❌',
         game_status TEXT DEFAULT 'OFF',
         start_time TIMESTAMP NULL,
-        end_time TIMESTAMP NULL                                 
+        end_time TIMESTAMP NULL,
+        question TEXT NULL,
+        correct_answer TEXT NULL                                 
         );
         """
         await self.execute(sql, execute=True)
@@ -268,12 +275,13 @@ class Database:
         return await self.execute(sql, telegram_id, battle_id, game_status, start_time, fetchrow=True)
 
     async def add_answer_to_temporary(self, telegram_id: int, battle_id: int, question_number: int, answer: str,
-                                      game_status: str):
-        sql = ("INSERT INTO temporary (telegram_id, battle_id, question_number, answer, game_status) "
-               "VALUES($1, $2, $3, $4, $5)")
+                                      game_status: str, question: str, correct_answer: str):
+        sql = ("INSERT INTO temporary ("
+               "telegram_id,battle_id,question_number,answer,game_status, question,correct_answer"
+               ") VALUES($1, $2, $3, $4, $5, $6, $7)")
         return await self.execute(
-            sql, telegram_id, battle_id, question_number, answer, game_status, fetchrow=True
-        )
+            sql, telegram_id, battle_id, question_number, answer, game_status, question, correct_answer,
+            fetchrow=True)
 
     async def end_answer_to_temporary(self, telegram_id: int, battle_id: int, game_status,
                                       end_time: datetime.datetime):

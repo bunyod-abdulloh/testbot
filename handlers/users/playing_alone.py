@@ -13,13 +13,13 @@ router = Router()
 
 async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     questions = await db.select_all_questions(table_name=f"table_{book_id}")
-
+    question_id = questions[0]['id']
     letters = ["A", "B", "C", "D"]
 
-    a = ["a", f"{questions[0][2]}"]
-    b = ["b", f"{questions[0][3]}"]
-    c = ["c", f"{questions[0][4]}"]
-    d = ["d", f"{questions[0][5]}"]
+    a = ["a", f"{questions[0]['a_correct']}"]
+    b = ["b", f"{questions[0]['b']}"]
+    c = ["c", f"{questions[0]['c']}"]
+    d = ["d", f"{questions[0]['d']}"]
 
     answers = [a, b, c, d]
 
@@ -36,7 +36,7 @@ async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     for letter, callback in answers_dict.items():
         builder.add(
             types.InlineKeyboardButton(
-                text=f"{letter}", callback_data=f"al_question:{callback[0]}:{book_id}"
+                text=f"{letter}", callback_data=f"al_question:{callback[0]}:{book_id}:{question_id}"
             )
         )
     builder.adjust(2, 2)
@@ -50,16 +50,27 @@ async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
 
 async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji):
     telegram_id = call.from_user.id
+    variant = call.data.split(":")[1]
     book_id = int(call.data.split(":")[2])
+    question_id = int(call.data.split(":")[3])
+    get_question = await db.select_question_by_id(table_name=f"table_{book_id}", id_=question_id)
+
     book_name = await db.select_book_by_id(id_=book_id)
     counter_db = await db.select_user_counter(
         telegram_id=telegram_id, battle_id=0
     )
     counter = counter_db['counter']
     if counter >= 10:
-        await db.add_answer_to_temporary(
-            telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON"
-        )
+        if variant == "a":
+            await db.add_answer_to_temporary(
+                telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON",
+                question=None, correct_answer=None
+            )
+        else:
+            await db.add_answer_to_temporary(
+                telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON",
+                question=get_question['question'], correct_answer=get_question['a_correct']
+            )
         await db.update_all_game_status(
             game_status="OVER", telegram_id=telegram_id, battle_id=0
         )
@@ -130,9 +141,16 @@ async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji)
             telegram_id=telegram_id
         )
     else:
-        await db.add_answer_to_temporary(
-            telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON"
-        )
+        if variant == "a":
+            await db.add_answer_to_temporary(
+                telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON",
+                question=None, correct_answer=None
+            )
+        else:
+            await db.add_answer_to_temporary(
+                telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON",
+                question=get_question['question'], correct_answer=get_question['a_correct']
+            )
         counter = counter_db['counter'] + 1
         await generate_question_alone(
             book_id=book_id, call=call, counter=counter
