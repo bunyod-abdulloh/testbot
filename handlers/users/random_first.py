@@ -56,29 +56,44 @@ async def generate_question(book_id, counter, call: types.CallbackQuery, battle_
     )
 
 
-async def first_text(telegram_id, battle_id, book_name, result_text, correct_answers, time, book_points):
+async def first_text(first_player, battle_id, book_name, correct_answers, time, second_player=None,
+                     second_correct_answers=None, second_time=None, second=False):
     answers = await db.select_answers_temporary(
-        battle_id=battle_id, telegram_id=telegram_id
+        battle_id=battle_id, telegram_id=first_player
+    )
+    full_name = await db.select_user(
+        telegram_id=first_player
     )
     numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟️']
     number_ = str()
     answer_ = str()
     wrongs_ = str()
-    tab = 'ㅤㅤ'
     for n in numbers:
         number_ += f"{n} "
     for index, answer in enumerate(answers):
         answer_ += f"{answer['answer']} "
         if answer['question']:
-            wrongs_ += f"{numbers[index]} - {answer['question']} \n✅ {answer['correct_answer']}\n\n"
-    result = f"{number_}\n{answer_}"
-    text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-            f"\n\n😊 <i><b><u>{result_text}:</u></b></i>"
-            f"\n\n<i><u>Bunyod: {correct_answers}/10 </u> |</i> 💎: <i><u>{book_points} ball</u> |</i> "            
-            f"⏳: <i><u>{time}</u></i>"
-            f"\n\n{result}\n\n👇👇👇{tab}🤷🏻‍♂️{tab}👇👇👇\n\n{wrongs_}"
-            )
+            wrongs_ += f"{numbers[index]} - {answer['question']}\n✅ {answer['correct_answer']}\n\n"
+    result = f"{number_}\n\n{answer_}"
+    if wrongs_:
+        text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+                f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+                f"💎: <i><u>{correct_answers} ball</u></i>\n\n⏳: <i><u>0{time}</u></i>"
+                f"\n\n{result}\n\n👇 Noto'g'ri javoblarga izohlar 👇\n\n{wrongs_}"
+                )
+    else:
+        text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+                f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+                f"💎: <i><u>{correct_answers} ball</u></i>\n\n⏳: <i><u>0{time}</u></i>"
+                f"\n\n{result}"
+                )
+    if second:
+        second_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+                       f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+                       f"💎: <i><u>{correct_answers} ball</u></i>\n\n⏳: <i><u>0{time}</u></i>"
+                       )
     return text
+
 
 
 def second_text(correct_answers, result_text, wrong_answers, time, book_points, book_rating, all_points, all_rating):
@@ -178,10 +193,8 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, oppon
                 first_all_points += result['result']
                 break
         f_text = await first_text(
-            book_name=book_name['table_name'], result_text="Sizning natijangiz",
-            correct_answers=first_correct_answers, wrong_answers=first_wrong_answers, time=difference,
-            book_points=first_points, battle_id=0, telegram_id=first_telegram_id
-
+            first_player=first_telegram_id, book_name=book_name['table_name'], correct_answers=first_correct_answers,
+            time=difference, battle_id=battle_id
         )
         if not second_battler or second_battler[0]['game_status'] == "ON":
             if not second_battler:

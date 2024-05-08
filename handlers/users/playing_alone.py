@@ -48,6 +48,39 @@ async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     )
 
 
+async def alone_text(telegram_id, book_name, correct_answers, time):
+    answers = await db.select_answers_temporary(
+        battle_id=0, telegram_id=telegram_id
+    )
+    full_name = await db.select_user(
+        telegram_id=telegram_id
+    )
+    numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟️']
+    number_ = str()
+    answer_ = str()
+    wrongs_ = str()
+    for n in numbers:
+        number_ += f"{n} "
+    for index, answer in enumerate(answers):
+        answer_ += f"{answer['answer']} "
+        if answer['question']:
+            wrongs_ += f"{numbers[index]} - {answer['question']}\n✅ {answer['correct_answer']}\n\n"
+    result = f"{number_}\n\n{answer_}"
+    if wrongs_:
+        text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+                f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+                f"💎: <i><u>{correct_answers} ball</u></i>\n\n⏳: <i><u>0{time}</u></i>"
+                f"\n\n{result}\n\n👇 Noto'g'ri javoblarga izohlar 👇\n\n{wrongs_}"
+                )
+    else:
+        text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+                f"\n\n<i><b>Bunyod:</b> <u>{correct_answers}/10 </u> |</i> 💎: <i><u>{correct_answers} ball</u></i> "
+                f"\n\n⏳: <i><u>0{time}</u></i>"
+                f"\n\n{result}"
+                )
+    return text
+
+
 async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji):
     telegram_id = call.from_user.id
     variant = call.data.split(":")[1]
@@ -89,40 +122,13 @@ async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji)
         correct_answers = await db.count_answers(
             telegram_id=telegram_id, answer="✅"
         )
-        # Noto'g'ri javoblar soni
-        wrong_answers = await db.count_answers(
-            telegram_id=telegram_id, answer="❌"
-        )
         # To'g'ri javoblar sonini Results jadvalidan yangilash
         await db.update_results(
             results=correct_answers, telegram_id=telegram_id, book_id=book_id, time_result=difference
         )
-        # Results jadvalidan user reytingini kitob bo'yicha aniqlash
-        rating_book = await db.get_rating_by_result(
-            book_id=book_id
-        )
-
-        rating_book_ = int()
-        book_points = int()
-
-        for index, result in enumerate(rating_book):
-            if result['telegram_id'] == telegram_id:
-                rating_book_ += index + 1
-                book_points += result['result']
-                break
-
-        # Results jadvalidan userning umumiy reytingini aniqlash
-        all_rating = await db.get_rating_all()
-        all_rating_ = int()
-        all_points = int()
-        for index, result in enumerate(all_rating):
-            if result['telegram_id'] == telegram_id:
-                all_rating_ += index + 1
-                all_points += result['result']
-                break
         f_text = await first_text(
-            book_name=book_name['table_name'], result_text="Sizning natijangiz", correct_answers=correct_answers,
-            time=difference, book_points=book_points, battle_id=0, telegram_id=telegram_id
+            first_player=telegram_id, book_name=book_name['table_name'], correct_answers=correct_answers,
+            time=difference, battle_id=0
         )
         await call.message.edit_text(
             text=f_text
@@ -130,14 +136,14 @@ async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji)
         await db.edit_status_users(
             game_on=False, telegram_id=telegram_id
         )
-        # # Natijani Temporary jadvalidan tozalash
-        # await db.delete_from_temporary(
-        #     telegram_id=telegram_id
-        # )
-        # # Counter jadvalidan user ma'lumotlarini tozalash
-        # await db.delete_from_counter(
-        #     telegram_id=telegram_id
-        # )
+        # Natijani Temporary jadvalidan tozalash
+        await db.delete_from_temporary(
+            telegram_id=telegram_id
+        )
+        # Counter jadvalidan user ma'lumotlarini tozalash
+        await db.delete_from_counter(
+            telegram_id=telegram_id
+        )
     else:
         if variant == "a":
             await db.add_answer_to_temporary(

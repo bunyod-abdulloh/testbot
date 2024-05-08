@@ -19,11 +19,18 @@ from loader import db
 # extracted_text = extract_text_from_pdf(pdf_path)
 # test.append(extracted_text)
 # List of questions and options
-mevalar = ["1. Olma", "2. Gilos", "30. Behi", "320. O'rik", "5. Uzum"]
+# Berilgan son
+from datetime import datetime
+
+# Berilgan vaqt
+vaqt_str = "0:00:20.744321"
+
+# Vaqt obyekti sifatida o'qish
+vaqt = datetime.strptime(vaqt_str, "%H:%M:%S.%f")
+
+# Vaqtni sekundga aylantirish
+sekundlar = vaqt.hour * 3600 + vaqt.minute * 60 + vaqt.second + vaqt.microsecond / 1000000
+butun_son = round(sekundlar)
+print(butun_son)
 
 
-a = ['a', 'b', 'c']
-b = ['1', '2', '3']
-
-c = zip(a, b)
-print(c)

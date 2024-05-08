@@ -300,7 +300,7 @@ class Database:
 
     async def select_answers_temporary(self, battle_id, telegram_id):
         sql = (f"SELECT * FROM temporary WHERE battle_id='{battle_id}' AND telegram_id='{telegram_id}' "
-               f"AND question_number IS NOT NULL")
+               f"AND question_number IS NOT NULL LIMIT 10")
         return await self.execute(sql, fetch=True)
 
     async def update_all_game_status(self, game_status, telegram_id, battle_id):
