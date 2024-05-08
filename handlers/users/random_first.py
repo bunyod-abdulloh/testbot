@@ -56,24 +56,27 @@ async def generate_question(book_id, counter, call: types.CallbackQuery, battle_
     )
 
 
-async def first_text(telegram_id, battle_id, book_name, result_text, correct_answers, wrong_answers, time, book_points):
+async def first_text(telegram_id, battle_id, book_name, result_text, correct_answers, time, book_points):
     answers = await db.select_answers_temporary(
         battle_id=battle_id, telegram_id=telegram_id
     )
-    numbers = ["1️⃣", "2️", "3️", "4️", "5️", "6️", "7️", "8️", "9️", "🔟️"]
-    num_answers = list(zip(numbers, answers))
-    print(num_answers)
-    result = None
-    number_ = None
-    answer_ = None
-    for number, answer in answers:
-        number_ += f"{number} "
-        answer_ += f"{answer} "
+    numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟️']
+    number_ = str()
+    answer_ = str()
+    wrongs_ = str()
+    tab = 'ㅤㅤ'
+    for n in numbers:
+        number_ += f"{n} "
+    for index, answer in enumerate(answers):
+        answer_ += f"{answer['answer']} "
+        if answer['question']:
+            wrongs_ += f"{numbers[index]} - {answer['question']} \n✅ {answer['correct_answer']}\n\n"
+    result = f"{number_}\n{answer_}"
     text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-            f"\n\n<i><b>Savollar soni:</b> 10 ta</i>\n\n😊 <i><b><u>{result_text}:</u></b></i>"
-            f"\n\n✅: <i><u>{correct_answers} ta</u> |</i> ❌: <i><u>{wrong_answers} ta</u> |</i> | "
-            f"💎: <i><u>{book_points} ball</u></i>"
-            f"\n⏳: <i><u>{time}</u></i>"            
+            f"\n\n😊 <i><b><u>{result_text}:</u></b></i>"
+            f"\n\n<i><u>Bunyod: {correct_answers}/10 </u> |</i> 💎: <i><u>{book_points} ball</u> |</i> "            
+            f"⏳: <i><u>{time}</u></i>"
+            f"\n\n{result}\n\n👇👇👇{tab}🤷🏻‍♂️{tab}👇👇👇\n\n{wrongs_}"
             )
     return text
 

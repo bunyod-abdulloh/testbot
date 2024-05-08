@@ -122,7 +122,7 @@ async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji)
                 break
         f_text = await first_text(
             book_name=book_name['table_name'], result_text="Sizning natijangiz", correct_answers=correct_answers,
-            wrong_answers=wrong_answers, time=difference, book_points=book_points, battle_id=0, telegram_id=telegram_id
+            time=difference, book_points=book_points, battle_id=0, telegram_id=telegram_id
         )
         await call.message.edit_text(
             text=f_text
