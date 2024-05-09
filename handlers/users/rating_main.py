@@ -37,7 +37,22 @@ async def nimadir(book_id, telegram_id):
             all_rating_ += index + 1
             all_points += result['result']
             break
-
+    # Results jadvalidan raqib reytingini kitob bo'yicha aniqlash
+    second_rating_book = int()
+    second_points = int()
+    for index, result in enumerate(rating_book):
+        if result['telegram_id'] == second_telegram_id:
+            second_rating_book += index + 1
+            second_points += result['result']
+            break
+    # Results jadvalidan raqib umumiy reytingini aniqlash
+    second_all_rating = int()
+    second_all_points = int()
+    for index, result in enumerate(all_rating):
+        if result['telegram_id'] == second_telegram_id:
+            second_all_rating += index + 1
+            second_all_points += result['result']
+            break
 
 @router.message(F.text == "📊 Reyting")
 async def router_main(message: types.Message):
