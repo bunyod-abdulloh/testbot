@@ -64,6 +64,15 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
     full_name = await db.select_user(
         telegram_id=first_player
     )
+    vaqt_str = f"{time}"
+
+    # Vaqt obyekti sifatida o'qish
+    vaqt = datetime.strptime(vaqt_str, "%H:%M:%S.%f")
+
+    # Vaqtni sekundga aylantirish
+    sekundlar = vaqt.hour * 3600 + vaqt.minute * 60 + vaqt.second + vaqt.microsecond / 1000000
+    butun_son = round(sekundlar)
+
     numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟️']
     number_ = str()
     answer_ = str()
@@ -75,36 +84,62 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
         if answer['question']:
             wrongs_ += f"{numbers[index]} - {answer['question']}\n✅ {answer['correct_answer']}\n\n"
     result = f"{number_}\n\n{answer_}"
-    if wrongs_:
-        text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-                f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                f"💎: <i><u>{correct_answers} ball</u></i>\n\n⏳: <i><u>0{time}</u></i>"
-                f"\n\n{result}\n\n👇 Noto'g'ri javoblarga izohlar 👇\n\n{wrongs_}"
-                )
-    else:
-        text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-                f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                f"💎: <i><u>{correct_answers} ball</u></i>\n\n⏳: <i><u>0{time}</u></i>"
-                f"\n\n{result}"
-                )
     if second:
-        second_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-                       f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                       f"💎: <i><u>{correct_answers} ball</u></i>\n\n⏳: <i><u>0{time}</u></i>"
-                       )
-    return text
+        second_full_name = await db.select_user(
+            telegram_id=second_player
+        )
+        vaqt_str_ = f"{second_time}"
+
+        # Vaqt obyekti sifatida o'qish
+        vaqt_ = datetime.strptime(vaqt_str_, "%H:%M:%S.%f")
+
+        # Vaqtni sekundga aylantirish
+        sekundlar_ = vaqt_.hour * 3600 + vaqt_.minute * 60 + vaqt_.second + vaqt_.microsecond / 1000000
+        butun_son_ = round(sekundlar_)
+        if wrongs_:
+            second_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+                           f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+                           f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
+                           f"\n\n<i><b>{second_full_name['full_name']}:</b> <u>{second_correct_answers}/10 </u> |</i> "
+                           f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} sekund</u></i>"
+                           f"\n\n{result}\n\n👇 Noto'g'ri javoblarga izohlar 👇\n\n{wrongs_}"
+                           )
+        else:
+            second_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+                           f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+                           f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
+                           f"\n\n<i><b>{second_full_name['full_name']}:</b> <u>{second_correct_answers}/10 </u> |</i> "
+                           f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} sekund</u></i>"
+                           )
+        return second_text
+    else:
+        if wrongs_:
+            text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+                    f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+                    f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
+                    f"\n\n{result}\n\n👇 Noto'g'ri javoblarga izohlar 👇\n\n{wrongs_}"
+                    )
+        else:
+            text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+                    f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+                    f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
+                    f"\n\n{result}"
+                    )
+        return text
 
 
 
-def second_text(correct_answers, result_text, wrong_answers, time, book_points, book_rating, all_points, all_rating):
-    text = (f"😎 <i><b><u>{result_text}:</u></b></i>"
-            f"\n\n✅: <i><u>{correct_answers} ta</u> |</i> ❌: <i><u>{wrong_answers} ta</u> |</i> "
-            f"⏳: <i><u>{time}</u></i>"
-            f"\n\n💎 <i><b>Kitob bo'yicha to'plangan ball:</b> {book_points} ball</i>"
-            f"\n\n📖 <i><b>Kitob bo'yicha reyting:</b> {book_rating} - o'rin</i>"
-            f"\n\n📥 <i><b>Umumiy ball:</b> {all_points} ball</i>"
-            f"\n\n📚 <i><b>Umumiy reyting:</b> {all_rating} - o'rin</i>")
-    return text
+
+
+# def second_text(correct_answers, result_text, wrong_answers, time, book_points, book_rating, all_points, all_rating):
+#     text = (f"😎 <i><b><u>{result_text}:</u></b></i>"
+#             f"\n\n✅: <i><u>{correct_answers} ta</u> |</i> ❌: <i><u>{wrong_answers} ta</u> |</i> "
+#             f"⏳: <i><u>{time}</u></i>"
+#             f"\n\n💎 <i><b>Kitob bo'yicha to'plangan ball:</b> {book_points} ball</i>"
+#             f"\n\n📖 <i><b>Kitob bo'yicha reyting:</b> {book_rating} - o'rin</i>"
+#             f"\n\n📥 <i><b>Umumiy ball:</b> {all_points} ball</i>"
+#             f"\n\n📚 <i><b>Umumiy reyting:</b> {all_rating} - o'rin</i>")
+#     return text
 
 
 async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, opponent=False):
@@ -259,10 +294,10 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, oppon
                     second_all_points += result['result']
                     break
             # Birinchi o'yinchiga ikkala natijani yuborish
-            s_text = second_text(
-                correct_answers=second_correct_answers, result_text="Raqibingiz natijasi",
-                wrong_answers=second_wrong_answers, time=difference_, book_rating=second_rating_book,
-                all_rating=second_all_rating, book_points=second_points, all_points=second_all_points
+            s_text = first_text(
+                first_player=first_telegram_id, battle_id=battle_id, book_name=book_name['table_name'],
+                correct_answers=first_correct_answers, time=difference, second_player=second_telegram_id,
+                second_correct_answers=second_correct_answers, second_time=difference_, second=True
             )
             f_start_time = await db.select_start_time(
                 telegram_id=first_telegram_id, battle_id=battle_id
@@ -273,10 +308,8 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, oppon
                 start_time=f_start_time[0]['start_time'], end_time=f_end_time
             )
             f_text = await first_text(
-                book_name=book_name['table_name'], result_text="Sizning natijangiz",
-                correct_answers=first_correct_answers, wrong_answers=first_wrong_answers, time=f_difference,
-                book_rating=first_rating_book_, all_rating=first_all_rating, book_points=first_points,
-                all_points=first_all_points
+                first_player=first_telegram_id, battle_id=battle_id, book_name=book_name['table_name'],
+                correct_answers=first_correct_answers, time=f_difference
             )
             await call.message.edit_text(
                 text=f"{f_text}\n\n{s_text}"

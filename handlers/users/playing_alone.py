@@ -55,6 +55,14 @@ async def alone_text(telegram_id, book_name, correct_answers, time):
     full_name = await db.select_user(
         telegram_id=telegram_id
     )
+    vaqt_str = f"{time}"
+
+    # Vaqt obyekti sifatida o'qish
+    vaqt = datetime.strptime(vaqt_str, "%H:%M:%S.%f")
+
+    # Vaqtni sekundga aylantirish
+    sekundlar = vaqt.hour * 3600 + vaqt.minute * 60 + vaqt.second + vaqt.microsecond / 1000000
+    butun_son = round(sekundlar)
     numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟️']
     number_ = str()
     answer_ = str()
@@ -69,13 +77,13 @@ async def alone_text(telegram_id, book_name, correct_answers, time):
     if wrongs_:
         text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
                 f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                f"💎: <i><u>{correct_answers} ball</u></i>\n\n⏳: <i><u>0{time}</u></i>"
+                f"💎: <i><u>{correct_answers} ball</u></i>\n\n⏳: <i><u>{butun_son}</u></i>"
                 f"\n\n{result}\n\n👇 Noto'g'ri javoblarga izohlar 👇\n\n{wrongs_}"
                 )
     else:
         text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
                 f"\n\n<i><b>Bunyod:</b> <u>{correct_answers}/10 </u> |</i> 💎: <i><u>{correct_answers} ball</u></i> "
-                f"\n\n⏳: <i><u>0{time}</u></i>"
+                f"\n\n⏳: <i><u>0{butun_son}</u></i>"
                 f"\n\n{result}"
                 )
     return text
