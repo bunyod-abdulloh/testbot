@@ -163,7 +163,7 @@ class Database:
         return await self.execute(sql, fetch=True)
 
     async def get_rating_all(self):
-        sql = f"SELECT telegram_id, result FROM Results WHERE result!=0 ORDER BY result DESC, time_result ASC"
+        sql = f"SELECT telegram_id, result FROM Results WHERE result!=0 ORDER BY result DESC, time_result ASC LIMIT 20"
         return await self.execute(sql, fetch=True)
 
     async def delete_from_results(self, telegram_id):

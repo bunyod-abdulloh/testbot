@@ -89,3 +89,9 @@ async def rating_by_book(callback_query: types.CallbackQuery):
 
 
 @router.callback_query(F.data == "rating_overall")
+async def rating_overall(callback_query: types.CallbackQuery):
+    telegram_id = callback_query.from_user.id
+    rating_overall_ = await db.get_rating_all()
+    overall_text = str()
+    for index, rating in enumerate(rating_overall_):
+        overall_text += f"{index + 1}) {rating['result']}\n"
