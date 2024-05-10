@@ -1,6 +1,6 @@
 from aiogram import Router, types, F
 
-from keyboards.inline.rating_kbs import rating_main_kb
+from keyboards.inline.rating_kbs import rating_main_kb, rating_books_kb
 from loader import db
 
 router = Router()
@@ -91,7 +91,7 @@ async def rating_by_book(callback_query: types.CallbackQuery):
 @router.callback_query(F.data == "rating_overall")
 async def rating_overall(callback_query: types.CallbackQuery):
     telegram_id = callback_query.from_user.id
-    rating_overall_ = await db.get_rating_all()
+    rating_overall_ = await db.get_rating_all_()
     overall_text = str()
     user_rating = str()
     for index, rating in enumerate(rating_overall_):
@@ -101,10 +101,28 @@ async def rating_overall(callback_query: types.CallbackQuery):
         )
         if index >= 20 or user['telegram_id'] == telegram_id:
             overall_text += f"{index}) {user['full_name']} - {rating['result']} ball\n"
-            user_rating = str()
+            user_rating = index
         else:
             user_rating += index
     await callback_query.message.edit_text(
-        text=f"Umumiy reyting natijalari:\n\n{overall_text}\n{user_rating}"
+        text=f"Umumiy reyting natijalari:\n\n{overall_text}\n<b>Umumiy reytingda Siz {user_rating} - o'rindasiz!</b>"
     )
 
+
+@router.callback_query(F.data == "rating_by_book")
+async def rating_by_book(callback_query: types.CallbackQuery):
+    await callback_query.message.edit_text(
+        text="Kerakli kitobni tanlang", reply_markup=await rating_books_kb()
+    )
+
+
+@router.callback_query(F.data.startswith("rating_id:"))
+async def get_rating_book(callback_query: types.CallbackQuery):
+    book_id = int(callback_query.data.split(":")[1])
+    get_book = await db.select_book_by_id(
+        id_=book_id
+    )
+    get_rating_by_book = await db.get_rating_book(
+        book_id=book_id
+    )
+    print(get_rating_by_book)

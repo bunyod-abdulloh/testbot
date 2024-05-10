@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from data.config import ADMINS
 from filters import IsBotAdminFilter
 from handlers.admin.add_book import download_and_save_file
-from handlers.admin.main import books_menu, test_qoshish
+from handlers.admin.main import books_menu
 from loader import db
 from states import AdminState
 from states.test import GetTest
@@ -34,9 +34,6 @@ async def admin_add_question(call: types.CallbackQuery):
             [
                 types.InlineKeyboardButton(
                     text="Excel shaklda", callback_data=f"add_excel:{book_id}"
-                ),
-                types.InlineKeyboardButton(
-                    text="PDFdan copy/paste", callback_data=f"add_pdf:{book_id}"
                 )
             ]
         ]
@@ -94,44 +91,4 @@ async def download_document(message: types.Message, state: FSMContext):
         await message.answer(
             text=f"{err}"
         )
-    await state.clear()
-
-
-@router.callback_query(F.data.startswith("add_pdf:"))
-async def admin_add_pdf(call: types.CallbackQuery, state: FSMContext):
-    await state.update_data(
-        book_id=call.data.split(":")[1]
-    )
-    await call.message.edit_text(
-        text="Test javoblarini yuboring"
-    )
-    await state.set_state(GetTest.one)
-
-
-@router.message(GetTest.one)
-async def get_test_two(message: types.Message, state: FSMContext):
-    test_javoblari = [message.text]
-
-    await state.update_data(
-        test_javoblari=test_javoblari
-    )
-    await message.answer(
-        text="Javoblar qabul qilindi! Test savollarini yuboring"
-    )
-    await state.set_state(GetTest.two)
-
-
-@router.message(GetTest.two)
-async def get_test_three(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    test_savollari = [message.text]
-    kitob_id = data.get('book_id')
-
-    kalit_javoblar = data.get('test_javoblari')
-    add_and_count = await test_qoshish(
-        savollar=test_savollari, kitob_nomi=f"table_{kitob_id}", kalit_javoblar=kalit_javoblar
-    )
-    await message.answer(
-        text=f"Jami {add_and_count} ta test savollari qabul qilindi!"
-    )
     await state.clear()

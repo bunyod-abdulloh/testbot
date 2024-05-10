@@ -110,7 +110,7 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
                            f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
                            f"\n\n<i><b>{second_full_name['full_name']}:</b> <u>{second_correct_answers}/10 </u> |</i> "
                            f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} sekund</u></i>"
-                           f"\n\n{result}\n\n👇 Noto'g'ri javoblarga izohlar 👇\n\n{wrongs_}"
+                           f"\n\n{result}\n\n👇 Noto'g'ri javoblaringizga izohlar 👇\n\n{wrongs_}"
                            )
         else:
             second_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
@@ -125,7 +125,7 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
             text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
                     f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
                     f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
-                    f"\n\n{result}\n\n👇 Noto'g'ri javoblarga izohlar 👇\n\n{wrongs_}"
+                    f"\n\n{result}\n\n👇 Noto'g'ri javoblaringizga izohlar 👇\n\n{wrongs_}"
                     )
         else:
             text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
