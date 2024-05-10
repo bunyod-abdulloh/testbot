@@ -158,20 +158,14 @@ class Database:
         return await self.execute(sql, fetch=True)
 
     async def get_rating_book(self, book_id):
-        sql = (f"SELECT telegram_id, result, time_result FROM Results WHERE book_id='{book_id}' AND result!=0 "
+        sql = (f"SELECT telegram_id, result FROM Results WHERE book_id='{book_id}' AND result!=0 "
                f"ORDER BY result DESC, time_result ASC")
         return await self.execute(sql, fetch=True)
 
-    async def get_rating_all(self):
-        sql = (f"SELECT SUM(result) telegram_id, result FROM Results WHERE result!=0 ORDER BY result DESC, time_result "
-               f"ASC")
-        return await self.execute(sql, fetch=True)
-
     async def get_rating_all_(self):
-        sql = (f"SELECT telegram_id, SUM(result) AS total_result FROM Results WHERE result != 0 GROUP BY telegram_id "
-               f"ORDER BY total_result DESC, time_result ASC")
+        sql = (f"SELECT telegram_id, SUM(result) AS total_result, SUM(time_result) AS times_result FROM Results "
+               f"WHERE result != 0 GROUP BY telegram_id ORDER BY total_result DESC, times_result ASC")
         return await self.execute(sql, fetch=True)
-
 
     async def delete_from_results(self, telegram_id):
         await self.execute(f"DELETE FROM Results WHERE telegram_id='{telegram_id}' "
