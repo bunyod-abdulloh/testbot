@@ -93,5 +93,18 @@ async def rating_overall(callback_query: types.CallbackQuery):
     telegram_id = callback_query.from_user.id
     rating_overall_ = await db.get_rating_all()
     overall_text = str()
+    user_rating = str()
     for index, rating in enumerate(rating_overall_):
-        overall_text += f"{index + 1}) {rating['result']}\n"
+        index = index + 1
+        user = await db.select_user(
+            telegram_id=rating['telegram_id']
+        )
+        if index >= 20 or user['telegram_id'] == telegram_id:
+            overall_text += f"{index}) {user['full_name']} - {rating['result']} ball\n"
+            user_rating = str()
+        else:
+            user_rating += index
+    await callback_query.message.edit_text(
+        text=f"Umumiy reyting natijalari:\n\n{overall_text}\n{user_rating}"
+    )
+
