@@ -17,6 +17,5 @@ class AdminState(StatesGroup):
     ask_ad_content = State()
 
 
-class GetTest(StatesGroup):
+class UserSOS(StatesGroup):
     one = State()
-    two = State()

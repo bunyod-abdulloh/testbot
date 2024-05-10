@@ -46,3 +46,12 @@ async def rating_books_kb():
     )
     builder.adjust(1)
     return builder.as_markup()
+
+
+back_rating_main = InlineKeyboardMarkup(
+    inline_keyboard=[[
+            InlineKeyboardButton(
+                text="⬅️ Ortga", callback_data="back_rating_main"
+            )
+        ]]
+)

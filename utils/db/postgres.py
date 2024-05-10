@@ -359,3 +359,33 @@ class Database:
 
     async def drop_table_counter(self):
         await self.execute(f"DROP TABLE Counter", execute=True)
+
+# ===================== TABLE | SOS =================
+    async def create_table_sos(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS sos (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NULL,        
+        question VARCHAR(4000) NULL,
+        created_at DATE DEFAULT CURRENT_DATE                                 
+        );
+        """
+        await self.execute(sql, execute=True)
+
+    async def add_question_sos(self, telegram_id, question):
+        sql = f"INSERT INTO sos (telegram_id, question) VALUES($1, $2)"
+        return await self.execute(sql, telegram_id, question, fetchrow=True)
+
+    async def select_questions_sos(self, telegram_id):
+        sql = f"SELECT * FROM sos WHERE telegram_id='{telegram_id}'"
+        return await self.execute(sql, fetchrow=True)
+
+    async def select_all_questions_sos(self):
+        sql = f"SELECT * FROM sos"
+        return await self.execute(sql, fetchrow=True)
+
+    async def delete_from_sos(self, telegram_id):
+        await self.execute(f"DELETE FROM sos WHERE telegram_id='{telegram_id}'", execute=True)
+
+    async def drop_table_sos(self):
+        await self.execute(f"DROP TABLE sos", execute=True)

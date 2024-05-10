@@ -1,6 +1,6 @@
 from aiogram import Router, types, F
 
-from keyboards.inline.rating_kbs import rating_main_kb, rating_books_kb
+from keyboards.inline.rating_kbs import rating_main_kb, rating_books_kb, back_rating_main
 from loader import db
 
 router = Router()
@@ -107,9 +107,10 @@ async def rating_overall(callback_query: types.CallbackQuery):
             user_rating += index
     await callback_query.message.edit_text(
         text=f"Umumiy reyting.\nTOP 20:\n\n{overall_text}\n<b>Umumiy reytingda Siz {user_rating} - o'rindasiz!</b>"
-             f"\n\n<i>*Izoh:\nMabodo boshqa ishtirokchilar bilan to'plagan ballaringiz bir xil lekin o'rinlar xar "
+             f"\n\n<i>* Izoh:\nMabodo boshqa ishtirokchilar bilan to'plagan ballaringiz bir xil lekin o'rinlar xar "
              f"hil bo'lsa, bot eng kam vaqt sarflab, eng ko'p to'g'ri javob bergan ishtirokchini yuqoriroq o'ringa "
-             f"qo'yadi!</i>"
+             f"qo'yadi!</i>",
+        reply_markup=back_rating_main
     )
 
 
@@ -148,7 +149,8 @@ async def get_rating_book(callback_query: types.CallbackQuery):
     await callback_query.message.edit_text(
         text=f"{book_name} kitobi bo'yicha reyting.\nTOP 20:\n\n{rating_text}"
              f"\n<b>{book_name} kitobi reytingida Siz {user_rating} - o'rindasiz!</b>"
-             f"\n\n<i>*Izoh:\nMabodo boshqa ishtirokchilar bilan to'plagan ballaringiz bir xil lekin o'rinlar xar "
+             f"\n\n<i>* Izoh:\nMabodo boshqa ishtirokchilar bilan to'plagan ballaringiz bir xil lekin o'rinlar xar "
              f"hil bo'lsa, bot eng kam vaqt sarflab, eng ko'p to'g'ri javob bergan ishtirokchini yuqoriroq o'ringa "
-             f"qo'yadi!</i>"
+             f"qo'yadi!</i>",
+        reply_markup=back_rating_main
     )

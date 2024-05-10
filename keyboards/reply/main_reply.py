@@ -1,7 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, KeyboardButtonRequestUser, KeyboardButtonRequestUsers
 
 
-def main_button(competition: str, rating: str, manual: str):
+def main_button(competition: str, rating: str, manual: str, questions: str):
     markup = ReplyKeyboardMarkup(
         keyboard=[
             [
@@ -11,6 +11,9 @@ def main_button(competition: str, rating: str, manual: str):
                 KeyboardButton(text=f"📊 {rating}"),
                 KeyboardButton(text=f"ℹ️ {manual}")
             ],
+            [
+                KeyboardButton(text=f"❓ {questions}")
+            ]
         ],
         resize_keyboard=True
     )
