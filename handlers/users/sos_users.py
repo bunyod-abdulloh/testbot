@@ -32,7 +32,7 @@ async def savol_va_takliflar_tasdiq(callback_query: types.CallbackQuery, state: 
     data = await state.get_data()
     user_message = data.get('user_message')
     await db.add_question_sos(
-        telegram_id=callback_query.from_user.id, question=user_message
+        telegram_id=callback_query.from_user.id, full_name=callback_query.from_user.full_name, question=user_message
     )
     await bot.send_message(
         chat_id=GROUP_ID,

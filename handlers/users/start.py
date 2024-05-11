@@ -5,12 +5,15 @@ from aiogram.filters import CommandStart, ChatMemberUpdatedFilter, IS_MEMBER, IS
 from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.fsm.context import FSMContext
 
+from filters import ChatTypeFilter
 from keyboards.inline.buttons import check_user_ibuttons
 from keyboards.reply.main_reply import main_button
 from loader import db, bot
 from data.config import ADMINS, GROUP_ID
 
 router = Router()
+router.message.filter(ChatTypeFilter(["private"]))
+
 uz_start_buttons = main_button(
     competition="Bellashuv", rating="Reyting", manual="Qo'llanma", questions="Savol va takliflar"
 )

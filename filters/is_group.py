@@ -1,7 +1,7 @@
 from aiogram.filters import Filter
 from aiogram import Bot, types
 
-from data.config import ADMINS, GROUP_ID
+from data.config import GROUP_ID
 
 
 class ChatTypeFilter(Filter):

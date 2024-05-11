@@ -19,3 +19,8 @@ class AdminState(StatesGroup):
 
 class UserSOS(StatesGroup):
     one = State()
+
+
+class AdminSOS(StatesGroup):
+    one = State()
+

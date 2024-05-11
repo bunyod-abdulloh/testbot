@@ -365,7 +365,8 @@ class Database:
         sql = """
         CREATE TABLE IF NOT EXISTS sos (
         id SERIAL PRIMARY KEY,
-        telegram_id BIGINT NULL,        
+        telegram_id BIGINT NULL,
+        full_name TEXT NULL,        
         question VARCHAR(4000) NULL,
         created_at DATE DEFAULT CURRENT_DATE,
         answer_status BOOLEAN NULL                                 
@@ -373,12 +374,20 @@ class Database:
         """
         await self.execute(sql, execute=True)
 
-    async def add_question_sos(self, telegram_id, question):
-        sql = f"INSERT INTO sos (telegram_id, question) VALUES($1, $2)"
-        return await self.execute(sql, telegram_id, question, fetchrow=True)
+    async def add_question_sos(self, telegram_id, full_name, question):
+        sql = f"INSERT INTO sos (telegram_id, full_name, question) VALUES($1, $2, $3)"
+        return await self.execute(sql, telegram_id, full_name, question, fetchrow=True)
 
     async def select_questions_sos(self, telegram_id):
         sql = f"SELECT * FROM sos WHERE telegram_id='{telegram_id}'"
+        return await self.execute(sql, fetch=True)
+
+    async def select_distinct_sos(self):
+        sql = f"SELECT DISTINCT full_name, telegram_id FROM sos"
+        return await self.execute(sql, fetch=True)
+
+    async def select_questions_by_id(self, id_):
+        sql = f"SELECT * FROM sos WHERE id='{id_}'"
         return await self.execute(sql, fetchrow=True)
 
     async def select_all_questions_sos(self):

@@ -13,8 +13,6 @@ def setup_routers() -> Router:
 
     router = Router()
 
-    # Agar kerak bo'lsa, o'z filteringizni o'rnating
-    sos_admin.router.message.filter(ChatTypeFilter(["supergroup"]), IsAdmin())
     router.include_routers(
         start.router, battle_main.router, random_first.router, random_second.router, with_friend.router,
         playing_alone.router, rating_main.router, sos_users.router,
