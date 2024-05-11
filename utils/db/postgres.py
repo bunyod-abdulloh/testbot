@@ -367,7 +367,8 @@ class Database:
         id SERIAL PRIMARY KEY,
         telegram_id BIGINT NULL,        
         question VARCHAR(4000) NULL,
-        created_at DATE DEFAULT CURRENT_DATE                                 
+        created_at DATE DEFAULT CURRENT_DATE,
+        answer_status BOOLEAN NULL                                 
         );
         """
         await self.execute(sql, execute=True)

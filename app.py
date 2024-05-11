@@ -3,6 +3,8 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.middlewares.request_logging import logger
+
+from filters.is_group import ChatTypeFilter
 from loader import db
 
 
@@ -28,6 +30,7 @@ def setup_filters(dispatcher: Dispatcher) -> None:
     # Chat turini aniqlash uchun klassik umumiy filtr
     # Filtrni handlers/users/__init__ -dagi har bir routerga alohida o'rnatish mumkin
     dispatcher.message.filter(ChatPrivateFilter(chat_type=["private"]))
+    # dispatcher.message.filter(ChatTypeFilter())
 
 
 async def setup_aiogram(dispatcher: Dispatcher, bot: Bot) -> None:
@@ -50,6 +53,7 @@ async def database_connected():
     await db.create_table_temporary_answers()
     await db.create_table_results()
     await db.create_table_counter()
+    await db.create_table_sos()
 
 
 async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:

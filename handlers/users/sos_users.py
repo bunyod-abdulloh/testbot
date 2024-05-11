@@ -1,7 +1,8 @@
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 
-from data.config import ADMINS
+from data.config import GROUP_ID
+from keyboards.inline.sos import sos_check
 from loader import db, bot
 from states.test import UserSOS
 
@@ -22,7 +23,7 @@ async def savol_va_takliflar_qabul(message: types.Message, state: FSMContext):
         user_message=message.text
     )
     await message.answer(
-        text="Habaringiz qabul qilindi! Tasdiqlaysizmi?"
+        text="Habaringiz qabul qilindi! Tasdiqlaysizmi?", reply_markup=sos_check
     )
 
 
@@ -33,11 +34,10 @@ async def savol_va_takliflar_tasdiq(callback_query: types.CallbackQuery, state: 
     await db.add_question_sos(
         telegram_id=callback_query.from_user.id, question=user_message
     )
-    for admin in ADMINS:
-        await bot.send_message(
-            chat_id=admin,
-            text="Botga yangi habar qabul qilindi! Ko'rish uchun /view buyrug'ini kiriting!"
-        )
+    await bot.send_message(
+        chat_id=GROUP_ID,
+        text="Botga yangi habar qabul qilindi! Ko'rish uchun /view buyrug'ini kiriting!"
+    )
     await callback_query.message.edit_text(
         text="Habaringiz qabul qilindi! Adminlarimiz tez orada javob berishga harakat qiladilar!"
     )
@@ -45,5 +45,9 @@ async def savol_va_takliflar_tasdiq(callback_query: types.CallbackQuery, state: 
 
 
 @router.callback_query(F.data == "sos_again")
-async def savol_va_takliflar_qayta(message: types.Message, state: FSMContext):
-    pass
+async def savol_va_takliflar_qayta(callback_query: types.CallbackQuery, state: FSMContext):
+    await callback_query.message.edit_text(
+        text="Habaringizni qayta kiriting"
+    )
+    await state.clear()
+    await state.set_state(UserSOS.one)

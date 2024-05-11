@@ -11,7 +11,6 @@ from handlers.admin.add_book import download_and_save_file
 from handlers.admin.main import books_menu
 from loader import db
 from states import AdminState
-from states.test import GetTest
 
 router = Router()
 
