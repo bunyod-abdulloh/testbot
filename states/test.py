@@ -23,4 +23,3 @@ class UserSOS(StatesGroup):
 
 class AdminSOS(StatesGroup):
     one = State()
-

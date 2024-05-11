@@ -3,6 +3,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.middlewares.request_logging import logger
+from aiogram.fsm.strategy import FSMStrategy
 
 from filters.is_group import ChatTypeFilter
 from loader import db
@@ -86,7 +87,7 @@ def main():
     allowed_updates = ['message', 'chat_member', 'callback_query']
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     storage = MemoryStorage()
-    dispatcher = Dispatcher(storage=storage)
+    dispatcher = Dispatcher(storage=storage, fsm_strategy=FSMStrategy.CHAT)
 
     dispatcher.startup.register(aiogram_on_startup_polling)
     dispatcher.shutdown.register(aiogram_on_shutdown_polling)

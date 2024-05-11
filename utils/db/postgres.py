@@ -368,8 +368,7 @@ class Database:
         telegram_id BIGINT NULL,
         full_name TEXT NULL,        
         question VARCHAR(4000) NULL,
-        created_at DATE DEFAULT CURRENT_DATE,
-        answer_status BOOLEAN NULL                                 
+        created_at DATE DEFAULT CURRENT_DATE                                         
         );
         """
         await self.execute(sql, execute=True)
@@ -394,8 +393,8 @@ class Database:
         sql = f"SELECT * FROM sos"
         return await self.execute(sql, fetchrow=True)
 
-    async def delete_from_sos(self, telegram_id):
-        await self.execute(f"DELETE FROM sos WHERE telegram_id='{telegram_id}'", execute=True)
+    async def delete_from_sos(self, id_):
+        await self.execute(f"DELETE FROM sos WHERE id='{id_}'", execute=True)
 
     async def drop_table_sos(self):
         await self.execute(f"DROP TABLE sos", execute=True)
