@@ -1,7 +1,7 @@
 from aiogram import Router
 
 from filters import ChatPrivateFilter
-from filters.is_group import ChatTypeFilter
+from filters.is_group import ChatTypeFilter, IsAdmin
 
 
 def setup_routers() -> Router:
@@ -14,9 +14,7 @@ def setup_routers() -> Router:
     router = Router()
 
     # Agar kerak bo'lsa, o'z filteringizni o'rnating
-    start.router.message.filter(ChatPrivateFilter(chat_type=["private"]))
-    sos_admin.router.message.filter(ChatTypeFilter(), ChatPrivateFilter(chat_type=["private", "supergroup"]))
-
+    sos_admin.router.message.filter(ChatTypeFilter(["supergroup"]), IsAdmin())
     router.include_routers(
         start.router, battle_main.router, random_first.router, random_second.router, with_friend.router,
         playing_alone.router, rating_main.router, sos_users.router,

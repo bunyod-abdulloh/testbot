@@ -4,6 +4,9 @@ from aiogram.enums import ChatType
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
+from data.config import GROUP_ID
+from loader import bot
+
 
 class ChatPrivateFilter(BaseFilter):
     def __init__(self, chat_type: Union[str, list]):
