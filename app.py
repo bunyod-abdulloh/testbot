@@ -6,6 +6,8 @@ from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.fsm.strategy import FSMStrategy
 
 from filters.is_group import ChatTypeFilter
+from handlers.admin.scheduler import scheduler
+
 from loader import db
 
 
@@ -26,8 +28,6 @@ def setup_middlewares(dispatcher: Dispatcher, bot: Bot) -> None:
 
 def setup_filters(dispatcher: Dispatcher) -> None:
     """FILTERS"""
-    from filters import ChatPrivateFilter
-
     # Chat turini aniqlash uchun klassik umumiy filtr
     # Filtrni handlers/users/__init__ -dagi har bir routerga alohida o'rnatish mumkin
     dispatcher.message.filter(ChatTypeFilter(chat_types=['supergroup', 'private']))
@@ -69,7 +69,7 @@ async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
     await setup_aiogram(bot=bot, dispatcher=dispatcher)
     await on_startup_notify(bot=bot)
     await set_default_commands(bot=bot)
-    # scheduler.start()
+    scheduler.start()
 
 
 async def aiogram_on_shutdown_polling(dispatcher: Dispatcher, bot: Bot):
@@ -88,7 +88,6 @@ def main():
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     storage = MemoryStorage()
     dispatcher = Dispatcher(storage=storage, fsm_strategy=FSMStrategy.CHAT)
-
     dispatcher.startup.register(aiogram_on_startup_polling)
     dispatcher.shutdown.register(aiogram_on_shutdown_polling)
     asyncio.run(dispatcher.start_polling(bot, close_bot_session=True, allowed_updates=allowed_updates))
