@@ -180,6 +180,9 @@ class Database:
         CREATE TABLE IF NOT EXISTS Tables (
         id SERIAL PRIMARY KEY,
         table_name VARCHAR(255) NULL,
+        comment_one TEXT NULL,
+        comment_two TEXT NULL,
+        comment_three TEXT NULL,        
         questions BOOLEAN DEFAULT FALSE                  
         );
         """
@@ -196,6 +199,10 @@ class Database:
     async def select_book_by_id(self, id_):
         sql = f"SELECT * FROM Tables WHERE id=$1"
         return await self.execute(sql, id_, fetchrow=True)
+
+    async def update_book_comments(self, comment_one, comment_two, comment_three, book_id):
+        sql = f"UPDATE Tables SET comment_one=$1, comment_two=$2, comment_three=$3 WHERE id='{book_id}'"
+        return await self.execute(sql, comment_one, comment_two,  comment_three, execute=True)
 
     async def update_book_name(self, new_name, book_id):
         sql = f"UPDATE Tables SET table_name='{new_name}' WHERE id='{book_id}'"

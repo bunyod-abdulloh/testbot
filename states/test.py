@@ -15,6 +15,12 @@ class AdminState(StatesGroup):
     edit_book = State()
     are_you_sure = State()
     ask_ad_content = State()
+    comment_main = State()
+    comment_one = State()
+    comment_two = State()
+    comment_three = State()
+    comment_four = State()
+    comment_five = State()
 
 
 class UserSOS(StatesGroup):

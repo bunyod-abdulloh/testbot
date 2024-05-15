@@ -17,28 +17,9 @@ async def result_time_game(start_time, end_time):
     return difference
 
 
-# @router.message(F.poll)
-# async def m_mes(message: types.Message):
-#     # print(message.poll)
-#     question = message.poll.question.split("\n\n")[0]
-#     a = message.poll.options[0].text
-#     b = message.poll.options[1].text
-#     c = message.poll.options[2].text
-#     d = "Bilmayman"
-#     await db.add_question(
-#         table_name="table_3", question=question, a_correct=a, b=b, c=c, d=d
-#     )
-#     print("qo'shildi!")
-
-
 @router.message(F.text == "⚔️ Bellashuv")
-async def uz_battle_main(state: FSMContext, message: types.Message = None, call: types.CallbackQuery = None):
-    await state.clear()
-    telegram_id = str()
-    if message:
-        telegram_id = message.from_user.id
-    if call:
-        telegram_id = call.from_user.id
+async def uz_battle_main(message: types.Message, state: FSMContext):
+    telegram_id = message.from_user.id
 
     # Users jadvalidan game_on ustunini FALSE holatiga tushirish
     await db.edit_status_users(
@@ -56,20 +37,13 @@ async def uz_battle_main(state: FSMContext, message: types.Message = None, call:
     await db.delete_from_counter(
         telegram_id=telegram_id
     )
-    if message:
-        await message.answer(
-            text="Savollar beriladigan kitob nomini tanlang",
-            reply_markup=await battle_main_ibuttons(
-                back_text="Ortga", back_callback="back_battle_main"
-            )
+    await message.answer(
+        text="Savollar beriladigan kitob nomini tanlang",
+        reply_markup=await battle_main_ibuttons(
+            back_text="Ortga", back_callback="back_battle_main"
         )
-    if call:
-        await call.message.edit_text(
-            text="Savollar beriladigan kitob nomini tanlang",
-            reply_markup=await battle_main_ibuttons(
-                back_text="Ortga", back_callback="back_battle_main"
-            )
-        )
+    )
+    await state.clear()
 
 
 @router.callback_query(F.data.startswith("table_"))
@@ -93,6 +67,9 @@ async def uz_back(call: types.CallbackQuery):
 
 @router.callback_query(F.data == "back_select_book")
 async def uz_back_books(call: types.CallbackQuery):
-    await uz_battle_main(
-        call=call
+    await call.message.edit_text(
+        text="Savollar beriladigan kitob nomini tanlang",
+        reply_markup=await battle_main_ibuttons(
+            back_text="Ortga", back_callback="back_battle_main"
+        )
     )
