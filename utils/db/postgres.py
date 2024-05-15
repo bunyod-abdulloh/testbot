@@ -212,6 +212,9 @@ class Database:
         sql = f"UPDATE Tables SET questions=TRUE WHERE id='{book_id}'"
         return await self.execute(sql, execute=True)
 
+    async def delete_book_tables(self, id_):
+        await self.execute(f"DELETE FROM Tables WHERE id='{id_}'", execute=True)
+
     async def drop_table_tables(self):
         await self.execute(f"DROP TABLE Tables", execute=True)
 

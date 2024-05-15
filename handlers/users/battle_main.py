@@ -48,9 +48,15 @@ async def uz_battle_main(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data.startswith("table_"))
 async def get_book_name(call: types.CallbackQuery):
-    book_id = call.data.split("_")[1]
+    book_id = int(call.data.split("_")[1])
+    book_name = await db.select_book_by_id(
+        id_=book_id
+    )
+    book = book_name['table_name']
+    if book_name['comment_one']:
+        book += f"\n\n{book_name['comment_one']}"
     await call.message.edit_text(
-        text="Bellashuv turini tanlang", reply_markup=battle_ibuttons(
+        text=f"{book}\n\nBellashuv turini tanlang", reply_markup=battle_ibuttons(
             random_opponent="Tasodifiy raqib bilan", offer_opponent="Do'stni taklif qilish",
             playing_alone="Yakka o'yin", back="Ortga", back_callback="back_select_book", book_id=book_id
         )

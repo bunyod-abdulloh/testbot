@@ -23,6 +23,9 @@ async def delete_book(call: types.CallbackQuery):
         await db.drop_table_book(
             table_name=f"table_{kitob_id}"
         )
+        await db.delete_book_tables(
+            id_=kitob_id
+        )
         await call.message.edit_text(
             text="Kitob o'chirildi"
         )
