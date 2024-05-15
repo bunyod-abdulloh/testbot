@@ -1,4 +1,4 @@
-from aiogram import Router, types, F, Dispatcher
+from aiogram import Router, types, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from filters import ChatTypeFilter
@@ -12,7 +12,8 @@ router.message.filter(ChatTypeFilter(["supergroup"]), IsAdmin())
 
 
 @router.message(Command("view"))
-async def savollar_view(message: types.Message):
+async def savollar_view(message: types.Message, state: FSMContext):
+    await state.clear()
     get_questions = await db.select_distinct_sos()
     if not get_questions:
         await message.answer(
@@ -96,7 +97,6 @@ async def tasdiqlash_va_yuborish(callback_query: types.CallbackQuery, state: FSM
         await db.delete_from_sos(
             id_=question_id
         )
-        await state.clear()
         questions = await db.select_questions_sos(
             telegram_id=telegram_id
         )
@@ -119,6 +119,7 @@ async def tasdiqlash_va_yuborish(callback_query: types.CallbackQuery, state: FSM
                 await callback_query.message.answer(
                     text="Savollar bo'limi", reply_markup=await questions_main()
                 )
+        await state.clear()
     except Exception as err:
         await callback_query.message.answer(
             text=f"{err}"

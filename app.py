@@ -69,7 +69,7 @@ async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
     await setup_aiogram(bot=bot, dispatcher=dispatcher)
     await on_startup_notify(bot=bot)
     await set_default_commands(bot=bot)
-    scheduler.start()
+    # scheduler.start()
 
 
 async def aiogram_on_shutdown_polling(dispatcher: Dispatcher, bot: Bot):

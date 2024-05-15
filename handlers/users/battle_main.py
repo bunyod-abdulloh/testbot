@@ -1,4 +1,5 @@
 from aiogram import Router, F, types
+from aiogram.fsm.context import FSMContext
 
 from handlers.users.start import uz_start_buttons
 from keyboards.inline.buttons import battle_ibuttons, battle_main_ibuttons
@@ -31,7 +32,8 @@ async def result_time_game(start_time, end_time):
 
 
 @router.message(F.text == "⚔️ Bellashuv")
-async def uz_battle_main(message: types.Message = None, call: types.CallbackQuery = None):
+async def uz_battle_main(state: FSMContext, message: types.Message = None, call: types.CallbackQuery = None):
+    await state.clear()
     telegram_id = str()
     if message:
         telegram_id = message.from_user.id

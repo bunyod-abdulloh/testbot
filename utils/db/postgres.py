@@ -319,8 +319,8 @@ class Database:
                f"AND question_number IS NOT NULL")
         return await self.execute(sql, fetchval=True)
 
-    async def clean_temporary_table(self, battle_id):
-        await self.execute(f"DELETE FROM temporary WHERE battle_id='{battle_id}'", execute=True)
+    async def clean_temporary_table(self):
+        await self.execute(f"DELETE FROM temporary", execute=True)
 
     async def delete_from_temporary(self, telegram_id):
         await self.execute(f"DELETE FROM temporary WHERE telegram_id='{telegram_id}'", execute=True)
@@ -356,6 +356,9 @@ class Database:
 
     async def delete_from_counter(self, telegram_id):
         await self.execute(f"DELETE FROM Counter WHERE telegram_id='{telegram_id}'", execute=True)
+
+    async def clean_counter_table(self):
+        await self.execute(f"DELETE FROM Counter", execute=True)
 
     async def drop_table_counter(self):
         await self.execute(f"DROP TABLE Counter", execute=True)
