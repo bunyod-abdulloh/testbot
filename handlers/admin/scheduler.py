@@ -22,4 +22,4 @@ async def clean_tables_scheduler():
 
 
 scheduler = AsyncIOScheduler(timezone="Asia/Tashkent")
-# scheduler.add_job(clean_tables_scheduler, trigger="cron", hour=2, minute=30, start_date=datetime.now())
+scheduler.add_job(clean_tables_scheduler, trigger="cron", hour=2, minute=20, start_date=datetime.now())

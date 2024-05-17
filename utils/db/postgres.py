@@ -49,10 +49,10 @@ class Database:
         sql = """
         CREATE TABLE IF NOT EXISTS Users (
         id SERIAL PRIMARY KEY,
-        full_name VARCHAR(255) NOT NULL,        
+        full_name VARCHAR(255) NOT NULL,
         telegram_id BIGINT NOT NULL,
         game_on BOOLEAN DEFAULT FALSE,
-        status BOOLEAN DEFAULT TRUE              
+        status BOOLEAN DEFAULT TRUE
         );
         """
         await self.execute(sql, execute=True)
@@ -86,10 +86,6 @@ class Database:
         sql = f"UPDATE Users SET status=TRUE"
         return await self.execute(sql, execute=True)
 
-    async def stop_game_users(self, telegram_id):
-        sql = f"UPDATE Users SET game_on=False WHERE telegram_id='{telegram_id}'"
-        return await self.execute(sql, execute=True)
-
     async def count_users(self):
         sql = "SELECT COUNT(*) FROM Users"
         return await self.execute(sql, fetchval=True)
@@ -104,19 +100,19 @@ class Database:
     async def hamma_userlarni_ochir(self):
         await self.execute(f"DELETE FROM Users", execute=True)
 
-    async def drop_users(self):
+    async def drop_table_users(self):
         await self.execute("DROP TABLE Users", execute=True)
 
     # ===================== TABLE | RESULTS =================
     async def create_table_results(self):
         sql = """
         CREATE TABLE IF NOT EXISTS Results (
-        id SERIAL PRIMARY KEY,                
-        telegram_id BIGINT NOT NULL,        
-        book_id INT NULL,        
-        result INT DEFAULT 0,        
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NOT NULL,
+        book_id INT NULL,
+        result INT DEFAULT 0,
         time_result INTERVAL NULL,
-        created_at DATE DEFAULT CURRENT_DATE        
+        created_at DATE DEFAULT CURRENT_DATE
         );
         """
         await self.execute(sql, execute=True)
@@ -125,37 +121,14 @@ class Database:
         sql = "INSERT INTO Results (telegram_id, book_id) VALUES($1, $2)"
         return await self.execute(sql, telegram_id, book_id, fetchrow=True)
 
-    async def add_gamer_(self, telegram_id, book_id, result, timer):
-        sql = "INSERT INTO Results (telegram_id, book_id, result, time_result) VALUES($1, $2, $3, $4)"
-        return await self.execute(sql, telegram_id, book_id, result, timer, fetchrow=True)
-
     async def select_user_in_results(self, telegram_id, book_id):
         sql = f"SELECT result FROM Results WHERE telegram_id='{telegram_id}' AND book_id='{book_id}'"
-        return await self.execute(sql, fetchrow=True)
-
-    async def select_in_results(self):
-        sql = f"SELECT * FROM Results"
-        return await self.execute(sql, fetchrow=True)
-
-    async def select_battle_id_results(self, telegram_id, book_id, battle_id):
-        sql = (f"SELECT * FROM Results WHERE telegram_id='{telegram_id}' AND book_id='{book_id}' "
-               f"AND battle_id='{battle_id}'")
         return await self.execute(sql, fetchrow=True)
 
     async def update_results(self, results, telegram_id, book_id, time_result):
         sql = (f"UPDATE Results SET result=result + '{results}', time_result='{time_result}'"
                f"WHERE telegram_id='{telegram_id}' AND book_id='{book_id}'")
         return await self.execute(sql, execute=True)
-
-    async def get_rating_by_id(self, book_name):
-        sql = (f"SELECT telegram_id SUM(result) AS total_result FROM Results WHERE book_id = '{book_name}' "
-               f"GROUP BY user ORDER BY total_result DESC")
-        return await self.execute(sql, fetchrow=True)
-
-    async def get_rating_by_result(self, book_id):
-        sql = (f"SELECT telegram_id, result, time_result FROM Results WHERE book_id = '{book_id}' "
-               f"ORDER BY result DESC, time_result ASC")
-        return await self.execute(sql, fetch=True)
 
     async def get_rating_book(self, book_id):
         sql = (f"SELECT telegram_id, result FROM Results WHERE book_id='{book_id}' AND result!=0 "
@@ -182,8 +155,8 @@ class Database:
         table_name VARCHAR(255) NULL,
         comment_one TEXT NULL,
         comment_two TEXT NULL,
-        comment_three TEXT NULL,        
-        questions BOOLEAN DEFAULT FALSE                  
+        comment_three TEXT NULL,
+        questions BOOLEAN DEFAULT FALSE
         );
         """
         await self.execute(sql, execute=True)
@@ -193,7 +166,7 @@ class Database:
         return await self.execute(sql, table_name, fetchrow=True)
 
     async def select_all_tables(self):
-        sql = f"SELECT * FROM Tables"
+        sql = f"SELECT * FROM Tables ORDER BY id"
         return await self.execute(sql, fetch=True)
 
     async def select_book_by_id(self, id_):
@@ -231,7 +204,7 @@ class Database:
         a_correct VARCHAR(255),
         b VARCHAR(255),
         c VARCHAR(255),
-        d VARCHAR(255)                 
+        d VARCHAR(255)
         );
         """
         await self.execute(sql, execute=True)
@@ -263,7 +236,7 @@ class Database:
         sql = """
         CREATE TABLE IF NOT EXISTS temporary (
         id SERIAL PRIMARY KEY,
-        telegram_id BIGINT NULL,            
+        telegram_id BIGINT NULL,
         battle_id INT NULL,
         question_number INT NULL,
         answer TEXT DEFAULT '❌',
@@ -271,7 +244,7 @@ class Database:
         start_time TIMESTAMP NULL,
         end_time TIMESTAMP NULL,
         question TEXT NULL,
-        correct_answer TEXT NULL                                 
+        correct_answer TEXT NULL
         );
         """
         await self.execute(sql, execute=True)
@@ -326,7 +299,7 @@ class Database:
 
     async def count_answers(self, telegram_id, answer):
         sql = (f"SELECT COUNT(answer) FROM Temporary WHERE telegram_id='{telegram_id}' AND answer='{answer}' "
-               f"AND question_number IS NOT NULL")
+               f"AND question_number IS NOT NULL LIMIT 10")
         return await self.execute(sql, fetchval=True)
 
     async def clean_temporary_table(self):
@@ -342,10 +315,10 @@ class Database:
 
     async def create_table_counter(self):
         sql = """
-        CREATE TABLE IF NOT EXISTS Counter (        
-        telegram_id BIGINT NULL,            
+        CREATE TABLE IF NOT EXISTS Counter (
+        telegram_id BIGINT NULL,
         battle_id INT NULL,
-        counter INT DEFAULT 0                                 
+        counter INT DEFAULT 0
         );
         """
         await self.execute(sql, execute=True)
@@ -379,9 +352,9 @@ class Database:
         CREATE TABLE IF NOT EXISTS sos (
         id SERIAL PRIMARY KEY,
         telegram_id BIGINT NULL,
-        full_name TEXT NULL,        
+        full_name TEXT NULL,
         question VARCHAR(4000) NULL,
-        created_at DATE DEFAULT CURRENT_DATE                                         
+        created_at DATE DEFAULT CURRENT_DATE
         );
         """
         await self.execute(sql, execute=True)

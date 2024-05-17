@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 
 from handlers.users.start import uz_start_buttons
 from keyboards.inline.buttons import battle_ibuttons, battle_main_ibuttons
-from loader import db
+from loader import db, bot
 
 router = Router()
 
@@ -20,7 +20,6 @@ async def result_time_game(start_time, end_time):
 @router.message(F.text == "⚔️ Bellashuv")
 async def uz_battle_main(message: types.Message, state: FSMContext):
     telegram_id = message.from_user.id
-
     # Users jadvalidan game_on ustunini FALSE holatiga tushirish
     await db.edit_status_users(
         game_on=False, telegram_id=telegram_id

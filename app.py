@@ -28,27 +28,23 @@ def setup_middlewares(dispatcher: Dispatcher, bot: Bot) -> None:
 
 def setup_filters(dispatcher: Dispatcher) -> None:
     """FILTERS"""
-    # Chat turini aniqlash uchun klassik umumiy filtr
-    # Filtrni handlers/users/__init__ -dagi har bir routerga alohida o'rnatish mumkin
     dispatcher.message.filter(ChatTypeFilter(chat_types=['supergroup', 'private']))
 
 
 async def setup_aiogram(dispatcher: Dispatcher, bot: Bot) -> None:
-    # logger.info("Configuring aiogram")
     setup_handlers(dispatcher=dispatcher)
     setup_middlewares(dispatcher=dispatcher, bot=bot)
     setup_filters(dispatcher=dispatcher)
-    # logger.info("Configured aiogram")
 
 
 async def database_connected():
     await db.create()
     # await db.drop_users()
     # await db.drop_table_tables()
-    await db.drop_table_temporary()
-    await db.drop_table_results()
-    await db.drop_table_counter()
-    await db.drop_table_sos()
+    # await db.drop_table_temporary()
+    # await db.drop_table_results()
+    # await db.drop_table_counter()
+    # await db.drop_table_sos()
     await db.create_table_users()
     await db.create_table_tables()
     await db.create_table_temporary_answers()
@@ -61,7 +57,7 @@ async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
     from utils.set_bot_commands import set_default_commands
     from utils.notify_admins import on_startup_notify
 
-    # logger.info("Database connected")
+    logger.info("Database connected")
     await database_connected()
 
     logger.info("Starting polling")
@@ -69,7 +65,7 @@ async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
     await setup_aiogram(bot=bot, dispatcher=dispatcher)
     await on_startup_notify(bot=bot)
     await set_default_commands(bot=bot)
-    # scheduler.start()
+    scheduler.start()
 
 
 async def aiogram_on_shutdown_polling(dispatcher: Dispatcher, bot: Bot):

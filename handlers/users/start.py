@@ -30,7 +30,6 @@ async def main_start(message: types.Message, state: FSMContext):
     await state.clear()
     telegram_id = message.from_user.id
     full_name = message.from_user.full_name
-    print(full_name)
     check_from_db = await db.select_user(
         telegram_id=telegram_id
     )
