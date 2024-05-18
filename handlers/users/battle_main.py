@@ -33,9 +33,9 @@ async def uz_battle_main(message: types.Message, state: FSMContext):
         telegram_id=telegram_id
     )
     # Counter jadvalidan hisoblagichni tozalash
-    await db.delete_from_counter(
-        telegram_id=telegram_id
-    )
+    # await db.delete_from_counter(
+    #     telegram_id=telegram_id
+    # )
     await message.answer(
         text="Savollar beriladigan kitob nomini tanlang",
         reply_markup=await battle_main_ibuttons(

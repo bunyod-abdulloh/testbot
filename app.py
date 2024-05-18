@@ -6,7 +6,7 @@ from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.fsm.strategy import FSMStrategy
 
 from filters.is_group import ChatTypeFilter
-from handlers.admin.scheduler import scheduler
+# from handlers.admin.scheduler import scheduler
 
 from loader import db
 
@@ -39,9 +39,9 @@ async def setup_aiogram(dispatcher: Dispatcher, bot: Bot) -> None:
 
 async def database_connected():
     await db.create()
-    # await db.drop_users()
+    # await db.drop_table_users()
     # await db.drop_table_tables()
-    # await db.drop_table_temporary()
+    await db.drop_table_temporary()
     # await db.drop_table_results()
     # await db.drop_table_counter()
     # await db.drop_table_sos()
@@ -65,7 +65,7 @@ async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
     await setup_aiogram(bot=bot, dispatcher=dispatcher)
     await on_startup_notify(bot=bot)
     await set_default_commands(bot=bot)
-    scheduler.start()
+    # scheduler.start()
 
 
 async def aiogram_on_shutdown_polling(dispatcher: Dispatcher, bot: Bot):

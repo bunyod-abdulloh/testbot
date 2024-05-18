@@ -2,6 +2,7 @@ import random
 from datetime import datetime
 
 from aiogram import Router, F, types
+from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.users.battle_main import result_time_game
@@ -22,26 +23,22 @@ async def generate_question(book_id, counter, call: types.CallbackQuery, battle_
     d = ["d", f"{questions[0]['d']}"]
 
     answers = [a, b, c, d]
-
     random.shuffle(answers)
-
-    answers_dict = dict(zip(letters, answers))
-
     questions_text = str()
 
-    for letter, question in answers_dict.items():
+    for letter, question in zip(letters, answers):
         questions_text += f"{letter}) {question[1]}\n"
 
     builder = InlineKeyboardBuilder()
     if opponent:
-        for letter, callback in answers_dict.items():
+        for letter, callback in zip(letters, answers):
             builder.add(
                 types.InlineKeyboardButton(
                     text=f"{letter}", callback_data=f"s_question:{callback[0]}:{book_id}:{battle_id}:{question_id}"
                 )
             )
     else:
-        for letter, callback in answers_dict.items():
+        for letter, callback in zip(letters, answers):
             builder.add(
                 types.InlineKeyboardButton(
                     text=f"{letter}", callback_data=f"question:{callback[0]}:{book_id}:{battle_id}:{question_id}"
@@ -61,6 +58,7 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
     answers = await db.select_answers_temporary(
         battle_id=battle_id, telegram_id=first_player
     )
+    print(answers)
     full_name = await db.select_user(
         telegram_id=first_player
     )
@@ -76,14 +74,13 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
     numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟️']
     number_ = str()
     answer_ = str()
-    wrongs_ = str()
+    answers_ = str()
     for n in numbers:
         number_ += f"{n} "
     for index, answer in enumerate(answers):
         answer_ += f"{answer['answer']} "
-        if answer['question']:
-            wrongs_ += f"{numbers[index]} - {answer['question']}\n✅ {answer['correct_answer']}\n\n"
-    result = f"{number_}\n\n{answer_}"
+        answers_ += f"{numbers[index]} - {answer['question']}\n✅ {answer['correct_answer']}\n\n"
+    result = f"{number_}\n\n{answer_}\n\n{answers_}"
     if second:
         second_full_name = await db.select_user(
             telegram_id=second_player
@@ -104,14 +101,14 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
                       f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} sekund</u></i>"
                       )
             return s_text
-        if wrongs_:
-            second_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-                           f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                           f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
-                           f"\n\n<i><b>{second_full_name['full_name']}:</b> <u>{second_correct_answers}/10 </u> |</i> "
-                           f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} sekund</u></i>"
-                           f"\n\n{result}\n\n👇 Noto'g'ri javoblaringizga izohlar 👇\n\n{wrongs_}"
-                           )
+        # if wrongs_:
+        #     second_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+        #                    f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+        #                    f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
+        #                    f"\n\n<i><b>{second_full_name['full_name']}:</b> <u>{second_correct_answers}/10 </u> |</i> "
+        #                    f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} sekund</u></i>"
+        #                    f"\n\n{result}\n\n👇 Noto'g'ri javoblaringizga izohlar 👇\n\n{wrongs_}"
+        #                    )
         else:
             second_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
                            f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
@@ -121,22 +118,22 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
                            )
         return second_text
     else:
-        if wrongs_:
-            text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-                    f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                    f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
-                    f"\n\n{result}\n\n👇 Noto'g'ri javoblaringizga izohlar 👇\n\n{wrongs_}"
-                    )
-        else:
-            text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-                    f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                    f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
-                    f"\n\n{result}"
-                    )
+        # if wrongs_:
+        #     text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+        #             f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+        #             f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
+        #             f"\n\n{result}\n\n👇 Noto'g'ri javoblaringizga izohlar 👇\n\n{wrongs_}"
+        #             )
+        # else:
+        text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
+                f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
+                f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
+                f"\n\n{result}"
+                )
         return text
 
 
-async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, opponent=False):
+async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state: FSMContext, opponent=False):
     first_telegram_id = call.from_user.id
     variant = call.data.split(":")[1]
     book_id = int(call.data.split(":")[2])

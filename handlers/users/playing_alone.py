@@ -2,6 +2,7 @@ import random
 from datetime import datetime
 
 from aiogram import Router, F, types
+from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.users.battle_main import result_time_game
@@ -22,18 +23,14 @@ async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     d = ["d", f"{questions[0]['d']}"]
 
     answers = [a, b, c, d]
-
     random.shuffle(answers)
-
-    answers_dict = dict(zip(letters, answers))
-
     questions_text = str()
 
-    for letter, question in answers_dict.items():
+    for letter, question in zip(letters, answers):
         questions_text += f"{letter}) {question[1]}\n"
 
     builder = InlineKeyboardBuilder()
-    for letter, callback in answers_dict.items():
+    for letter, callback in zip(letters, answers):
         builder.add(
             types.InlineKeyboardButton(
                 text=f"{letter}", callback_data=f"al_question:{callback[0]}:{book_id}:{question_id}"
@@ -48,69 +45,20 @@ async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
     )
 
 
-async def alone_text(telegram_id, book_name, correct_answers, time):
-    answers = await db.select_answers_temporary(
-        battle_id=0, telegram_id=telegram_id
-    )
-    full_name = await db.select_user(
-        telegram_id=telegram_id
-    )
-    vaqt_str = f"{time}"
-
-    # Vaqt obyekti sifatida o'qish
-    vaqt = datetime.strptime(vaqt_str, "%H:%M:%S.%f")
-
-    # Vaqtni sekundga aylantirish
-    sekundlar = vaqt.hour * 3600 + vaqt.minute * 60 + vaqt.second + vaqt.microsecond / 1000000
-    butun_son = round(sekundlar)
-    numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟️']
-    number_ = str()
-    answer_ = str()
-    wrongs_ = str()
-    for n in numbers:
-        number_ += f"{n} "
-    for index, answer in enumerate(answers):
-        answer_ += f"{answer['answer']} "
-        if answer['question']:
-            wrongs_ += f"{numbers[index]} - {answer['question']}\n✅ {answer['correct_answer']}\n\n"
-    result = f"{number_}\n\n{answer_}"
-    if wrongs_:
-        text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-                f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                f"💎: <i><u>{correct_answers} ball</u></i>\n\n⏳: <i><u>{butun_son}</u></i>"
-                f"\n\n{result}\n\n👇 Noto'g'ri javoblarga izohlar 👇\n\n{wrongs_}"
-                )
-    else:
-        text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-                f"\n\n<i><b>Bunyod:</b> <u>{correct_answers}/10 </u> |</i> 💎: <i><u>{correct_answers} ball</u></i> "
-                f"\n\n⏳: <i><u>0{butun_son}</u></i>"
-                f"\n\n{result}"
-                )
-    return text
-
-
-async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji):
+async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji, state: FSMContext):
     telegram_id = call.from_user.id
-    variant = call.data.split(":")[1]
     book_id = int(call.data.split(":")[2])
     question_id = int(call.data.split(":")[3])
     get_question = await db.select_question_by_id(table_name=f"table_{book_id}", id_=question_id)
     book_name = await db.select_book_by_id(id_=book_id)
-    counter_db = await db.select_user_counter(
-        telegram_id=telegram_id, battle_id=0
-    )
-    counter = counter_db['counter']
+
+    c = await state.get_data()
+    counter = c['alone']
     if counter >= 10:
-        if variant == "a":
-            await db.add_answer_to_temporary(
-                telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON",
-                question=None, correct_answer=None
-            )
-        else:
-            await db.add_answer_to_temporary(
-                telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON",
-                question=get_question['question'], correct_answer=get_question['a_correct']
-            )
+        await db.add_answer_to_temporary(
+            telegram_id=telegram_id, battle_id=0, answer=answer_emoji, game_status="ON",
+            question=get_question['question'], correct_answer=get_question['a_correct']
+        )
         await db.update_all_game_status(
             game_status="OVER", telegram_id=telegram_id, battle_id=0
         )
@@ -128,7 +76,7 @@ async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji)
         )
         # To'g'ri javoblar soni
         correct_answers = await db.count_answers(
-            telegram_id=telegram_id, answer="✅"
+            telegram_id=telegram_id, battle_id=0, answer="✅"
         )
         # To'g'ri javoblar sonini Results jadvalidan yangilash
         await db.update_results(
@@ -148,41 +96,27 @@ async def send_alone_result_or_continue(call: types.CallbackQuery, answer_emoji)
         await db.delete_from_temporary(
             telegram_id=telegram_id
         )
-        # Counter jadvalidan user ma'lumotlarini tozalash
-        await db.delete_from_counter(
-            telegram_id=telegram_id
-        )
     else:
-        if variant == "a":
-            await db.add_answer_to_temporary(
-                telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON",
-                question=None, correct_answer=None
-            )
-        else:
-            await db.add_answer_to_temporary(
-                telegram_id=telegram_id, battle_id=0, question_number=counter, answer=answer_emoji, game_status="ON",
-                question=get_question['question'], correct_answer=get_question['a_correct']
-            )
-        counter = counter_db['counter'] + 1
+        await db.add_answer_to_temporary(
+            telegram_id=telegram_id, battle_id=0, answer=answer_emoji, game_status="ON",
+            question=get_question['question'], correct_answer=get_question['a_correct']
+        )
+        counter = c['alone'] + 1
         await generate_question_alone(
             book_id=book_id, call=call, counter=counter
         )
-        await db.update_counter(
-            counter=1, battle_id=0, telegram_id=telegram_id
+        await state.update_data(
+            alone=counter
         )
 
 
 @router.callback_query(F.data.startswith("alone:"))
-async def alone_first(call: types.CallbackQuery):
+async def alone_first(call: types.CallbackQuery, state: FSMContext):
     book_id = int(call.data.split(":")[1])
     telegram_id = call.from_user.id
     c = 1
     await generate_question_alone(
         book_id=book_id, call=call, counter=c
-    )
-    # Counter jadvaliga savol tartib raqamini kiritish
-    await db.add_to_counter(
-        telegram_id=telegram_id, battle_id=0, counter=c
     )
     # Userni Results jadvalida bor yo'qligini tekshirish
     check_in_results = await db.select_user_in_results(
@@ -197,17 +131,19 @@ async def alone_first(call: types.CallbackQuery):
     await db.edit_status_users(
         game_on=True, telegram_id=telegram_id
     )
-
     start_time = datetime.now()
     await db.start_time_to_temporary(
         telegram_id=telegram_id, battle_id=0, game_status="ON", start_time=start_time
     )
+    await state.update_data(
+        alone=c
+    )
 
 
 @router.callback_query(F.data.startswith("al_question:a"))
-async def alone_second(call: types.CallbackQuery):
+async def alone_second(call: types.CallbackQuery, state: FSMContext):
     await send_alone_result_or_continue(
-        call=call, answer_emoji="✅"
+        call=call, answer_emoji="✅", state=state
     )
 
 
@@ -216,7 +152,7 @@ magic_alone = (F.data.startswith("al_question:b") | F.data.startswith("al_questi
 
 
 @router.callback_query(magic_alone)
-async def alone_third(call: types.CallbackQuery):
+async def alone_third(call: types.CallbackQuery, state: FSMContext):
     await send_alone_result_or_continue(
-        call=call, answer_emoji="❌"
+        call=call, answer_emoji="❌", state=state
     )
