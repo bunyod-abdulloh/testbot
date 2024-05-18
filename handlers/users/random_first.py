@@ -1,12 +1,13 @@
 import random
 from datetime import datetime
 
+import aiogram.exceptions
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.users.battle_main import result_time_game
-from keyboards.inline.buttons import to_offer_ibuttons, StartPlayingCallback
+from keyboards.inline.buttons import to_offer_ibuttons, StartPlayingCallback, battle_ibuttons
 from loader import db, bot
 
 router = Router()
@@ -58,7 +59,6 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
     answers = await db.select_answers_temporary(
         battle_id=battle_id, telegram_id=first_player
     )
-    print(answers)
     full_name = await db.select_user(
         telegram_id=first_player
     )
@@ -96,38 +96,24 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
         if second_send:
             s_text = (f"<b><i>Yakuniy natijalar</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
                       f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                      f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
+                      f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} soniya</u></i>"
                       f"\n\n<i><b>{second_full_name['full_name']}:</b> <u>{second_correct_answers}/10 </u> |</i> "
-                      f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} sekund</u></i>"
+                      f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} soniya</u></i>"
                       )
             return s_text
-        # if wrongs_:
-        #     second_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-        #                    f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-        #                    f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
-        #                    f"\n\n<i><b>{second_full_name['full_name']}:</b> <u>{second_correct_answers}/10 </u> |</i> "
-        #                    f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} sekund</u></i>"
-        #                    f"\n\n{result}\n\n👇 Noto'g'ri javoblaringizga izohlar 👇\n\n{wrongs_}"
-        #                    )
         else:
             second_text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
                            f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                           f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
+                           f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} soniya</u></i>"
                            f"\n\n<i><b>{second_full_name['full_name']}:</b> <u>{second_correct_answers}/10 </u> |</i> "
-                           f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} sekund</u></i>"
+                           f"💎: <i><u>{second_correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son_} soniya</u></i>"
+                           f"\n\n{result}"
                            )
         return second_text
     else:
-        # if wrongs_:
-        #     text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
-        #             f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-        #             f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
-        #             f"\n\n{result}\n\n👇 Noto'g'ri javoblaringizga izohlar 👇\n\n{wrongs_}"
-        #             )
-        # else:
         text = (f"<b><i>Bellashuv natijalari</i></b>\n\n<i><b>Kitob nomi:</b> {book_name}</i>"
                 f"\n\n<i><b>{full_name['full_name']}:</b> <u>{correct_answers}/10 </u> |</i> "
-                f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} sekund</u></i>"
+                f"💎: <i><u>{correct_answers} ball</u> |</i> ⏳: <i><u>{butun_son} soniya</u></i>"
                 f"\n\n{result}"
                 )
         return text
@@ -135,7 +121,6 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
 
 async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state: FSMContext, opponent=False):
     first_telegram_id = call.from_user.id
-    variant = call.data.split(":")[1]
     book_id = int(call.data.split(":")[2])
     battle_id = int(call.data.split(":")[3])
     question_id = int(call.data.split(":")[4])
@@ -143,28 +128,19 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state
     book_name = await db.select_book_by_id(
         id_=book_id
     )
-
-    counter_db = await db.select_user_counter(
-        telegram_id=first_telegram_id, battle_id=battle_id
-    )
-    if counter_db['counter'] >= 10:
-        if variant == "a":
-            await db.add_answer_to_temporary(
-                telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter_db['counter'],
-                answer=answer_emoji, game_status="ON", question=None, correct_answer=None
-            )
-        else:
-            await db.add_answer_to_temporary(
-                telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter_db['counter'],
-                answer=answer_emoji, game_status="ON", question=get_question['question'],
-                correct_answer=get_question['a_correct']
-            )
+    c = await state.get_data()
+    counter = c['duet']
+    if counter >= 10:
+        await db.add_answer_to_temporary(
+            telegram_id=first_telegram_id, battle_id=battle_id, answer=answer_emoji, game_status="ON",
+            question=get_question['question'], correct_answer=get_question['a_correct']
+        )
         await db.update_all_game_status(
             game_status="OVER", telegram_id=first_telegram_id, battle_id=battle_id
         )
         # To'g'ri javoblar soni
         first_correct_answers = await db.count_answers(
-            telegram_id=first_telegram_id, answer="✅"
+            telegram_id=first_telegram_id, battle_id=battle_id, answer="✅"
         )
         second_battler = await db.get_battle_temporary(
             battle_id=battle_id, telegram_id=first_telegram_id
@@ -204,10 +180,6 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state
                     text=f"{f_text}\n\n"
                          f"Raqibingiz hali o'yinni tugatmadi! Tugatganidan so'ng raqibingiz natijalari ham yuboriladi!"
                 )
-            # Counter jadvalidan user ma'lumotlarini tozalash
-            await db.delete_from_counter(
-                telegram_id=first_telegram_id
-            )
         else:
             second_telegram_id = second_battler[0]['telegram_id']
             # Raqib o'yinni tugatgan vaqtni ma'lumotlar omboriga yozish
@@ -223,7 +195,7 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state
             )
             # Raqib to'g'ri javoblari soni
             second_correct_answers = await db.count_answers(
-                telegram_id=second_telegram_id, answer="✅"
+                telegram_id=second_telegram_id, battle_id=battle_id, answer="✅"
             )
             # Userni Result jadvalida natijasini tekshirish
             check_results_ = await db.select_user_in_results(
@@ -250,9 +222,12 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state
                 correct_answers=first_correct_answers, time=difference, second_player=second_telegram_id,
                 second_correct_answers=second_correct_answers, second_time=difference_, second=True, second_send=True
             )
-            await bot.send_message(
-                chat_id=second_telegram_id, text=f"{s_text_bot}"
-            )
+            try:
+                await bot.send_message(
+                    chat_id=second_telegram_id, text=f"{s_text_bot}"
+                )
+            except Exception as err:
+                print(f"Error sending message 246 {err}")
             # Users jadvalida ikkinchi o'yinchiga game_on FALSE qilish
             await db.edit_status_users(
                 game_on=False, telegram_id=second_telegram_id
@@ -269,27 +244,13 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state
             await db.delete_from_temporary(
                 telegram_id=first_telegram_id
             )
-            # Counter jadvalidan User ma'lumotlarini tozalash
-            await db.delete_from_counter(
-                telegram_id=second_telegram_id
-            )
-        # Counter jadvalidan User ma'lumotlarini tozalash
-        await db.delete_from_counter(
-            telegram_id=first_telegram_id
-        )
+        await state.clear()
     else:
-        if variant == "a":
-            await db.add_answer_to_temporary(
-                telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter_db['counter'],
-                answer=answer_emoji, game_status="ON", question=None, correct_answer=None
-            )
-        else:
-            await db.add_answer_to_temporary(
-                telegram_id=first_telegram_id, battle_id=battle_id, question_number=counter_db['counter'],
-                answer=answer_emoji, game_status="ON", question=get_question['question'],
-                correct_answer=get_question['a_correct']
-            )
-        counter = counter_db['counter'] + 1
+        await db.add_answer_to_temporary(
+            telegram_id=first_telegram_id, battle_id=battle_id, answer=answer_emoji, game_status="ON",
+            question=get_question['question'], correct_answer=get_question['a_correct']
+        )
+        counter = c['duet'] + 1
         if opponent:
             await generate_question(
                 book_id=book_id, counter=counter, call=call, battle_id=battle_id, opponent=True
@@ -298,8 +259,8 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state
             await generate_question(
                 book_id=book_id, counter=counter, call=call, battle_id=battle_id
             )
-        await db.update_counter(
-            counter=1, battle_id=battle_id, telegram_id=first_telegram_id
+        await state.update_data(
+            duet=counter
         )
 
 
@@ -314,42 +275,57 @@ async def get_random_in_battle(call: types.CallbackQuery):
     random_user = await db.select_user_random(
         telegram_id=user_id
     )
-
+    not_battler = ("Bellashish uchun raqib topilmadi! <b>Raqib taklif qilish</b>ingiz yoki <b>Yakka o'yin</b> "
+                   "o'ynashingiz mumkin!")
     if random_user is None:
         await call.message.edit_text(
-            text="Bellashish uchun raqib topilmadi! <b>Raqib taklif qilish</b>ingiz yoki <b>Yakka o'yin</b> "
-                 "o'ynashingiz mumkin!"
+            text=not_battler
         )
     else:
+        telegram_id = random_user['telegram_id']
         markup = to_offer_ibuttons(
             agree_text="Qabul qilish", agree_id=user_id, refusal_text="Rad qilish", book_id=book_id
         )
-        await bot.send_message(
-            chat_id=random_user['telegram_id'],
-            text=f"Foydalanuvchi {full_name} Sizni {book_name} kitobi bo'yicha bellashuvga taklif qilmoqda!",
-            reply_markup=markup
-        )
-        await call.message.edit_text(
-            text="Raqibingizdan javob kelmasa qayta <b>Tasodifiy raqib bilan</b> tugmasini bosing!"
-        )
-        await call.answer(
-            text="Raqibingizga bellashuv taklifi yuborildi!"
-        )
+        try:
+            await bot.send_message(
+                chat_id=telegram_id,
+                text=f"Foydalanuvchi {full_name} Sizni {book_name} kitobi bo'yicha bellashuvga taklif qilmoqda!",
+                reply_markup=markup
+            )
+            await call.message.edit_text(
+                text="Raqibingizdan javob kelmasa qayta <b>Tasodifiy raqib bilan</b> tugmasini bosing!"
+            )
+            await call.answer(
+                text="Raqibingizga bellashuv taklifi yuborildi!"
+            )
+        except aiogram.exceptions.TelegramForbiddenError:
+            await db.userni_ochir(
+                telegram_id=telegram_id
+            )
+            if book_name_['comment_one']:
+                book_name += f"\n\n{book_name['comment_one']}"
+            await call.message.edit_text(
+                text=f"{book_name}\n\nBellashuv turini tanlang", reply_markup=battle_ibuttons(
+                    random_opponent="Tasodifiy raqib bilan", offer_opponent="Do'stni taklif qilish",
+                    playing_alone="Yakka o'yin", back="Ortga", back_callback="back_select_book", book_id=str(book_id)
+                )
+            )
+            await call.answer(
+                text=not_battler, show_alert=True
+            )
 
 
 @router.callback_query(StartPlayingCallback.filter())
-async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCallback):
+async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCallback, state: FSMContext):
     book_id = callback_data.book_id
     battle_id = callback_data.battle_id
     first_player_id = call.from_user.id
-    c_one = 1
-
-    await generate_question(
-        book_id=book_id, counter=c_one, call=call, battle_id=battle_id
+    c = 1
+    await state.update_data(
+        duet=c
     )
-    # Counter jadvaliga savol tartib raqamini kiritish
-    await db.add_to_counter(
-        telegram_id=first_player_id, battle_id=battle_id, counter=c_one
+    await generate_question(
+        book_id=book_id, counter=c, call=call, battle_id=battle_id
     )
     # Userni natijalar jadvalida bor yo'qligini tekshirish
     check_in_results = await db.select_user_in_results(
@@ -371,9 +347,9 @@ async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCa
 
 
 @router.callback_query(F.data.startswith("question:a"))
-async def get_question_first_a(call: types.CallbackQuery):
+async def get_question_first_a(call: types.CallbackQuery, state: FSMContext):
     await send_result_or_continue(
-        answer_emoji="✅", call=call
+        answer_emoji="✅", call=call, state=state
     )
 
 
@@ -382,7 +358,7 @@ first_answer_filter = (F.data.startswith("question:b") | F.data.startswith("ques
 
 
 @router.callback_query(first_answer_filter)
-async def get_question_first(call: types.CallbackQuery):
+async def get_question_first(call: types.CallbackQuery, state: FSMContext):
     await send_result_or_continue(
-        answer_emoji="❌", call=call
+        answer_emoji="❌", call=call, state=state
     )

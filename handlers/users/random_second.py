@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from aiogram import types, Router, F
+from aiogram.fsm.context import FSMContext
+
 from handlers.users.random_first import send_result_or_continue, generate_question
 from keyboards.inline.buttons import OfferCallback, play_battle_ibuttons
 from loader import db, bot
@@ -9,7 +11,7 @@ router = Router()
 
 
 @router.callback_query(OfferCallback.filter())
-async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback):
+async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback, state: FSMContext):
     first_player_id = callback_data.agree_id
     second_player_id = call.from_user.id
     book_id = callback_data.book_id
@@ -31,10 +33,9 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback):
             start_text="Boshlash", book_id=book_id, battle_id=battle_id
         )
     )
-    c_two = 1
-    # Counter jadvaliga savol tartib raqamini kiritish
-    await db.add_to_counter(
-        telegram_id=second_player_id, battle_id=battle_id, counter=c_two
+    c = 1
+    await state.update_data(
+        duet=c
     )
     # Userni Results jadvalida bor yo'qligini tekshirish
     check_in_results = await db.select_user_in_results(
@@ -50,7 +51,7 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback):
         game_on=True, telegram_id=second_player_id
     )
     await generate_question(
-        book_id=book_id, counter=c_two, call=call, battle_id=battle_id, opponent=True
+        book_id=book_id, counter=c, call=call, battle_id=battle_id, opponent=True
     )
     start_time = datetime.now()
     await db.start_time_to_temporary(
@@ -59,9 +60,9 @@ async def get_opponent(call: types.CallbackQuery, callback_data: OfferCallback):
 
 
 @router.callback_query(F.data.startswith("s_question:a"))
-async def get_question_answer_a(call: types.CallbackQuery):
+async def get_question_answer_a(call: types.CallbackQuery, state: FSMContext):
     await send_result_or_continue(
-        answer_emoji="✅", call=call, opponent=True
+        answer_emoji="✅", call=call, opponent=True, state=state
     )
 
 
@@ -70,7 +71,7 @@ second_answer_filter = (F.data.startswith("s_question:b") | F.data.startswith("s
 
 
 @router.callback_query(second_answer_filter)
-async def get_question_answer(call: types.CallbackQuery):
+async def get_question_answer(call: types.CallbackQuery, state: FSMContext):
     await send_result_or_continue(
-        answer_emoji="❌", call=call, opponent=True
+        answer_emoji="❌", call=call, opponent=True, state=state
     )

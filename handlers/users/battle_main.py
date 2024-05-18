@@ -32,10 +32,6 @@ async def uz_battle_main(message: types.Message, state: FSMContext):
     await db.delete_from_temporary(
         telegram_id=telegram_id
     )
-    # Counter jadvalidan hisoblagichni tozalash
-    # await db.delete_from_counter(
-    #     telegram_id=telegram_id
-    # )
     await message.answer(
         text="Savollar beriladigan kitob nomini tanlang",
         reply_markup=await battle_main_ibuttons(
@@ -57,7 +53,7 @@ async def get_book_name(call: types.CallbackQuery):
     await call.message.edit_text(
         text=f"{book}\n\nBellashuv turini tanlang", reply_markup=battle_ibuttons(
             random_opponent="Tasodifiy raqib bilan", offer_opponent="Do'stni taklif qilish",
-            playing_alone="Yakka o'yin", back="Ortga", back_callback="back_select_book", book_id=book_id
+            playing_alone="Yakka o'yin", back="Ortga", back_callback="back_select_book", book_id=str(book_id)
         )
     )
 

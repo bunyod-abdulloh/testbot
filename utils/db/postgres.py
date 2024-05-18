@@ -100,6 +100,9 @@ class Database:
     async def hamma_userlarni_ochir(self):
         await self.execute(f"DELETE FROM Users", execute=True)
 
+    async def userni_ochir(self, telegram_id):
+        await self.execute(f"DELETE FROM Users WHERE telegram_id='{telegram_id}'", execute=True)
+
     async def drop_table_users(self):
         await self.execute("DROP TABLE Users", execute=True)
 
