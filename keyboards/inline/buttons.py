@@ -5,16 +5,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from loader import db
 
 
-class OfferCallback(CallbackData, prefix="random_opponent"):
-    agree_id: int
-    book_id: int
-
-
-class StartPlayingCallback(CallbackData, prefix="start_playing"):
-    book_id: int
-    battle_id: int
-
-
 def check_user_ibuttons(status: str):
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -72,15 +62,13 @@ def battle_ibuttons(random_opponent: str, offer_opponent: str, playing_alone: st
 
 def to_offer_ibuttons(agree_text: str, agree_id: int, refusal_text: str, book_id: int):
 
-    callback_factory = OfferCallback(agree_id=agree_id, book_id=book_id)
-
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=f"🎮 {agree_text}", callback_data=callback_factory.pack())
+                InlineKeyboardButton(text=f"🎮 {agree_text}", callback_data=f"agree:{agree_id}:{book_id}")
             ],
             [
-                InlineKeyboardButton(text=f"❌ {refusal_text}", callback_data=callback_factory.pack())
+                InlineKeyboardButton(text=f"❌ {refusal_text}", callback_data=f"refusal:{agree_id}")
             ]
         ]
     )
@@ -88,11 +76,10 @@ def to_offer_ibuttons(agree_text: str, agree_id: int, refusal_text: str, book_id
 
 
 def play_battle_ibuttons(start_text: str, book_id: int, battle_id: int):
-    callback_factory = StartPlayingCallback(book_id=book_id, battle_id=battle_id)
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=f"🚀 {start_text}", callback_data=callback_factory.pack())
+                InlineKeyboardButton(text=f"🚀 {start_text}", callback_data=f"play_b:{book_id}:{battle_id}")
             ]
         ]
     )

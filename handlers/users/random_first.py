@@ -7,10 +7,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.users.battle_main import result_time_game
-from keyboards.inline.buttons import to_offer_ibuttons, StartPlayingCallback, battle_ibuttons
+from keyboards.inline.buttons import to_offer_ibuttons
 from loader import db, bot
 
 router = Router()
+
+numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟️']
 
 
 async def generate_question(book_id, counter, call: types.CallbackQuery, battle_id, opponent=False):
@@ -71,7 +73,6 @@ async def first_text(first_player, battle_id, book_name, correct_answers, time, 
     sekundlar = vaqt.hour * 3600 + vaqt.minute * 60 + vaqt.second + vaqt.microsecond / 1000000
     butun_son = round(sekundlar)
 
-    numbers = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟️']
     number_ = str()
     answer_ = str()
     answers_ = str()
@@ -177,7 +178,7 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state
                 )
             else:
                 await call.message.edit_text(
-                    text=f"{f_text}\n\n"
+                    text=f"{f_text}\n"
                          f"Raqibingiz hali o'yinni tugatmadi! Tugatganidan so'ng raqibingiz natijalari ham yuboriladi!"
                 )
         else:
@@ -226,16 +227,18 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state
                 await bot.send_message(
                     chat_id=second_telegram_id, text=f"{s_text_bot}"
                 )
-            except Exception as err:
-                print(f"Error sending message 246 {err}")
-            # Users jadvalida ikkinchi o'yinchiga game_on FALSE qilish
-            await db.edit_status_users(
-                game_on=False, telegram_id=second_telegram_id
-            )
-            # Ikkinchi o'yinchi natijalarini Temporary jadvalidan tozalash
-            await db.delete_from_temporary(
-                telegram_id=second_telegram_id
-            )
+                # Users jadvalida ikkinchi o'yinchiga game_on FALSE qilish
+                await db.edit_status_users(
+                    game_on=False, telegram_id=second_telegram_id
+                )
+                # Ikkinchi o'yinchi natijalarini Temporary jadvalidan tozalash
+                await db.delete_from_temporary(
+                    telegram_id=second_telegram_id
+                )
+            except aiogram.exceptions.TelegramForbiddenError:
+                await db.userni_ochir(
+                    telegram_id=second_telegram_id
+                )
             # Birinchi o'yinchiga Users jadvalida game_on FALSE qilish
             await db.edit_status_users(
                 game_on=False, telegram_id=first_telegram_id
@@ -275,8 +278,7 @@ async def get_random_in_battle(call: types.CallbackQuery):
     random_user = await db.select_user_random(
         telegram_id=user_id
     )
-    not_battler = ("Bellashish uchun raqib topilmadi! <b>Raqib taklif qilish</b>ingiz yoki <b>Yakka o'yin</b> "
-                   "o'ynashingiz mumkin!")
+    not_battler = "Bellashish uchun raqib topilmadi! Raqib taklif qilishingiz yoki Yakka o'yin o'ynashingiz mumkin!"
     if random_user is None:
         await call.message.edit_text(
             text=not_battler
@@ -292,33 +294,23 @@ async def get_random_in_battle(call: types.CallbackQuery):
                 text=f"Foydalanuvchi {full_name} Sizni {book_name} kitobi bo'yicha bellashuvga taklif qilmoqda!",
                 reply_markup=markup
             )
-            await call.message.edit_text(
-                text="Raqibingizdan javob kelmasa qayta <b>Tasodifiy raqib bilan</b> tugmasini bosing!"
-            )
             await call.answer(
-                text="Raqibingizga bellashuv taklifi yuborildi!"
+                text="Bellashuv taklifi yuborildi! Raqibingizdan javob kelmasa qayta Tasodifiy raqib bilan tugmasini "
+                     "bosing!", show_alert=True
             )
         except aiogram.exceptions.TelegramForbiddenError:
             await db.userni_ochir(
                 telegram_id=telegram_id
-            )
-            if book_name_['comment_one']:
-                book_name += f"\n\n{book_name['comment_one']}"
-            await call.message.edit_text(
-                text=f"{book_name}\n\nBellashuv turini tanlang", reply_markup=battle_ibuttons(
-                    random_opponent="Tasodifiy raqib bilan", offer_opponent="Do'stni taklif qilish",
-                    playing_alone="Yakka o'yin", back="Ortga", back_callback="back_select_book", book_id=str(book_id)
-                )
             )
             await call.answer(
                 text=not_battler, show_alert=True
             )
 
 
-@router.callback_query(StartPlayingCallback.filter())
-async def start_playing(call: types.CallbackQuery, callback_data: StartPlayingCallback, state: FSMContext):
-    book_id = callback_data.book_id
-    battle_id = callback_data.battle_id
+@router.callback_query(F.data.startswith("play_b:"))
+async def start_playing(call: types.CallbackQuery, state: FSMContext):
+    book_id = call.data.split(":")[1]
+    battle_id = int(call.data.split(":")[2])
     first_player_id = call.from_user.id
     c = 1
     await state.update_data(

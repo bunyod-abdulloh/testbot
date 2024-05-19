@@ -37,18 +37,6 @@ async def main_start(message: types.Message, state: FSMContext):
     await db.edit_status_users(
         game_on=False, telegram_id=telegram_id
     )
-    # Results jadvalidan user ma'lumotlarini tozalash
-    await db.delete_from_results(
-        telegram_id=telegram_id
-    )
-    # Temporary answers jadvalidan user ma'lumotlarini tozalash
-    await db.delete_from_temporary(
-        telegram_id=telegram_id
-    )
-    # Counter jadvalidan hisoblagichni tozalash
-    await db.delete_from_counter(
-        telegram_id=telegram_id
-    )
     try:
         if check_from_db:
             pass
@@ -62,57 +50,57 @@ async def main_start(message: types.Message, state: FSMContext):
     )
     # await message.answer(text="Assalomu alaykum! Botdan foydalanish uchun guruhimizga a'zo bo'ling!",
     #                      reply_markup=uz_check_buttons)
-
-
-@router.callback_query(F.data == "status")
-async def check_user_status(call: types.CallbackQuery):
-    user_id = call.from_user.id
-
-    user_status = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
-
-    await call.message.delete()
-    if user_status.status != ChatMemberStatus.LEFT:
-        await call.message.answer(
-            text="Assalomu alaykum!",
-            reply_markup=uz_start_buttons
-        )
-    else:
-        await call.message.answer(
-            text="Siz guruhga a'zo bo'lmagansiz! Botdan foydalanish uchun iltimos guruhga a'zo bo'ling! Guruh "
-                 "havolasini admindan olishingiz mumkin!",
-            reply_markup=types.ReplyKeyboardRemove()
-        )
-
-
-@router.chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
-async def join_member(event: types.ChatMemberUpdated):
-    user_id = event.from_user.id
-
-    CHAT_ID = str(event.chat.id)
-
-    if CHAT_ID == GROUP_ID:
-        try:
-            await bot.send_message(
-                chat_id=user_id,
-                text="Siz bot guruhiga qo'shildingiz! Botdan foydalanishingiz mumkin!",
-                reply_markup=uz_start_buttons
-            )
-        except Exception:
-            pass
-
-
-@router.chat_member(ChatMemberUpdatedFilter(IS_MEMBER >> IS_NOT_MEMBER))
-async def leave_member(event: types.ChatMemberUpdated):
-    user_id = event.from_user.id
-
-    CHAT_ID = str(event.chat.id)
-
-    if CHAT_ID == GROUP_ID:
-        try:
-            await bot.send_message(
-                chat_id=user_id,
-                text="Siz bot guruhidan chiqdingiz! Botdan foydalanish imkoniyati cheklandi!",
-                reply_markup=types.ReplyKeyboardRemove()
-            )
-        except Exception:
-            pass
+#
+#
+# @router.callback_query(F.data == "status")
+# async def check_user_status(call: types.CallbackQuery):
+#     user_id = call.from_user.id
+#
+#     user_status = await bot.get_chat_member(chat_id=GROUP_ID, user_id=user_id)
+#
+#     await call.message.delete()
+#     if user_status.status != ChatMemberStatus.LEFT:
+#         await call.message.answer(
+#             text="Assalomu alaykum!",
+#             reply_markup=uz_start_buttons
+#         )
+#     else:
+#         await call.message.answer(
+#             text="Siz guruhga a'zo bo'lmagansiz! Botdan foydalanish uchun iltimos guruhga a'zo bo'ling! Guruh "
+#                  "havolasini admindan olishingiz mumkin!",
+#             reply_markup=types.ReplyKeyboardRemove()
+#         )
+#
+#
+# @router.chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
+# async def join_member(event: types.ChatMemberUpdated):
+#     user_id = event.from_user.id
+#
+#     CHAT_ID = str(event.chat.id)
+#
+#     if CHAT_ID == GROUP_ID:
+#         try:
+#             await bot.send_message(
+#                 chat_id=user_id,
+#                 text="Siz bot guruhiga qo'shildingiz! Botdan foydalanishingiz mumkin!",
+#                 reply_markup=uz_start_buttons
+#             )
+#         except Exception:
+#             pass
+#
+#
+# @router.chat_member(ChatMemberUpdatedFilter(IS_MEMBER >> IS_NOT_MEMBER))
+# async def leave_member(event: types.ChatMemberUpdated):
+#     user_id = event.from_user.id
+#
+#     CHAT_ID = str(event.chat.id)
+#
+#     if CHAT_ID == GROUP_ID:
+#         try:
+#             await bot.send_message(
+#                 chat_id=user_id,
+#                 text="Siz bot guruhidan chiqdingiz! Botdan foydalanish imkoniyati cheklandi!",
+#                 reply_markup=types.ReplyKeyboardRemove()
+#             )
+#         except Exception:
+#             pass

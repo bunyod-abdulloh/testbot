@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 
 from handlers.users.start import uz_start_buttons
 from keyboards.inline.buttons import battle_ibuttons, battle_main_ibuttons
-from loader import db, bot
+from loader import db
 
 router = Router()
 
@@ -23,14 +23,6 @@ async def uz_battle_main(message: types.Message, state: FSMContext):
     # Users jadvalidan game_on ustunini FALSE holatiga tushirish
     await db.edit_status_users(
         game_on=False, telegram_id=telegram_id
-    )
-    # Results jadvalidan user ma'lumotlarini tozalash
-    await db.delete_from_results(
-        telegram_id=telegram_id
-    )
-    # Temporary answers jadvalidan user ma'lumotlarini tozalash
-    await db.delete_from_temporary(
-        telegram_id=telegram_id
     )
     await message.answer(
         text="Savollar beriladigan kitob nomini tanlang",

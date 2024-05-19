@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 
 from aiogram import Router, F, types
 from aiogram.client.session.middlewares.request_logging import logger
@@ -10,6 +11,7 @@ from keyboards.inline.buttons import are_you_sure_markup
 from keyboards.reply.admin_buttons import admin_tugmalari
 from loader import db, bot
 from states import AdminState
+from utils.pgtoexcel import export_to_excel
 
 router = Router()
 
@@ -30,6 +32,9 @@ async def admin_users_main(message: types.Message):
             ],
             [
                 types.KeyboardButton(text="😊 Barchani blockdan chiqarish")
+            ],
+            [
+                types.KeyboardButton(text="🔘 Excel yuklab olish")
             ],
             [
                 types.KeyboardButton(text="🔙 Ortga")
@@ -128,3 +133,34 @@ async def unblock_all_users(message: types.Message):
     await message.answer(
         text=f"{nofaollar_soni} ta foydalanuvchilar blokdan chiqarildi!"
     )
+
+
+@router.message(F.text == "🔘 Excel yuklab olish")
+async def download_users(message: types.Message):
+    # date = datetime.datetime.now().date()
+    # all_users = await db.select_all_users()
+    # file_path = f"downloads/documents/USERS_{date}.xlsx"
+    # await export_to_excel(data=all_users, headings=["id", "full_name", "telegram_id"],
+    #                       filepath=file_path)
+    all_results = await db.select_all_results()
+    # file_path_ = f"downloads/documents/RESULTS_{date}.xlsx"
+    # created_at = str()
+    # full_name = str()
+    # book_name = str()
+    # result = str()
+    send_to_xls = list()
+    for n in all_results:
+        created_at = str(n['created_at'])
+        get_fullname = await db.select_user(
+            telegram_id=n['telegram_id']
+        )
+        full_name = get_fullname['full_name']
+        get_book = await db.select_book_by_id(
+            id_=n['book_id']
+        )
+        book_name = get_book['table_name']
+        result = str(n['result'])
+        send_to_xls = zip(created_at, full_name, book_name, result)
+    print(list(send_to_xls))
+    # await export_to_excel(data=all_results, headings=["id", "telegram_id", "book_id", ],
+    #                       filepath=file_path_)
