@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from data.config import ADMINS
 from filters import IsBotAdminFilter
 from keyboards.inline.admin_book import admin_yes_no
+from keyboards.reply.admin_buttons import books_main_kb
 from loader import bot, db
 from states import AdminState
 
@@ -22,7 +23,14 @@ async def download_and_save_file(file_id: str, save_path: str):
     return file_path
 
 
-@router.message(IsBotAdminFilter(ADMINS), F.text == "➕ Kitob qo'shish")
+@router.message(F.text == "📚 Kitob va savollar qo'shish bo'limi")
+async def admin_books_main(message: types.Message):
+    await message.answer(
+        text=message.text, reply_markup=books_main_kb
+    )
+
+
+@router.message(IsBotAdminFilter(ADMINS), F.text == "Kitob qo'shish")
 async def add_book(message: types.Message, state: FSMContext):
     await message.answer(
         text="Savollar beriladigan kitob nomini kiriting"
@@ -79,7 +87,6 @@ async def comment_two(message: types.Message, state: FSMContext):
 
 @router.callback_query(AdminState.comment_two)
 async def comment_three(callback_query: types.CallbackQuery, state: FSMContext):
-
     if callback_query.data == "yesadmin":
         await callback_query.message.edit_text(
             text="Izohingiz qabul qilindi! Yana izoh kiritasizmi?", reply_markup=admin_yes_no
@@ -111,7 +118,6 @@ async def comment_three_func(message: types.Message, state: FSMContext):
 
 @router.callback_query(AdminState.comment_four)
 async def comment_four(callback_query: types.CallbackQuery, state: FSMContext):
-
     if callback_query.data == "yesadmin":
         await callback_query.message.edit_text(
             text="Izohingiz qabul qilindi! Yana izoh kiritasizmi?", reply_markup=admin_yes_no

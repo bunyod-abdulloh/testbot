@@ -1,6 +1,5 @@
 import os
 
-import asyncpg
 from aiogram import Router, types, F
 
 from handlers.admin.main import books_menu
@@ -39,7 +38,8 @@ async def download_book(call: types.CallbackQuery):
         )
         kitob_nomi_ = kitob_nomi['table_name'].replace("|", "_").replace(" ", "_")
         file_path = f"downloads/{kitob_nomi_}.xlsx"
-        await export_to_excel(data=all_questions, headings=[f"{kitob_nomi['table_name']}", "A | CORRECT", "B", "C", "D"],
+        await export_to_excel(data=all_questions,
+                              headings=[f"{kitob_nomi['table_name']}", "A | CORRECT", "B", "C", "D"],
                               filepath=file_path)
         await call.message.delete()
         await call.message.answer_document(types.input_file.FSInputFile(file_path))

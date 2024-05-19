@@ -5,7 +5,7 @@ from filters.is_group import ChatTypeFilter, IsAdmin
 
 
 def setup_routers() -> Router:
-    from .admin import add_book, add_questions, delete_book, download_excel, edit_book, main, users_, sos_admin
+    from .admin import add_book, add_questions, delete_book, download_excel, edit_book, main, users_, sos_admin, results
     from .users import (battle_main, random_second, random_first, with_friend, playing_alone, start, rating_main,
                         sos_users)
     from .errors import error_handler
@@ -20,7 +20,7 @@ def setup_routers() -> Router:
     # Admin
     router.include_routers(
         add_book.router, add_questions.router, delete_book.router, download_excel.router, edit_book.router,
-        main.router, users_.router, sos_admin.router
+        main.router, users_.router, sos_admin.router, results.router
     )
 
     # Errors | BOT

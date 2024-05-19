@@ -62,7 +62,7 @@ class Database:
         return await self.execute(sql, full_name, telegram_id, fetchrow=True)
 
     async def select_all_users(self):
-        sql = "SELECT * FROM Users"
+        sql = "SELECT DISTINCT telegram_id FROM Users"
         return await self.execute(sql, fetch=True)
 
     async def select_user(self, telegram_id):
@@ -115,7 +115,7 @@ class Database:
         book_id INT NULL,
         result INT DEFAULT 0,
         time_result INTERVAL NULL,
-        created_at DATE DEFAULT CURRENT_DATE
+        created_at DATE DEFAULT CURRENT_DATE::TIMESTAMP
         );
         """
         await self.execute(sql, execute=True)
@@ -130,6 +130,16 @@ class Database:
 
     async def select_all_results(self):
         sql = f"SELECT * FROM Results"
+        return await self.execute(sql, fetch=True)
+
+    async def select_results_by_between(self, last, today):
+        sql = (f"SELECT telegram_id, book_id, result FROM Results WHERE created_at BETWEEN '{last}' AND '{today}' "
+               f"ORDER BY result DESC, time_result ASC")
+        return await self.execute(sql, fetch=True)
+
+    async def select_results_by_date(self, date):
+        sql = (f"SELECT telegram_id, book_id, result FROM Results WHERE created_at='{date}' "
+               f"ORDER BY result DESC, time_result ASC")
         return await self.execute(sql, fetch=True)
 
     async def update_results(self, results, telegram_id, book_id, time_result):

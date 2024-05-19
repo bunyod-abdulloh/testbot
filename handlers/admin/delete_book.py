@@ -6,7 +6,7 @@ from loader import db
 router = Router()
 
 
-@router.message(F.text == "🆑 Kitob o'chirish")
+@router.message(F.text == "Kitob o'chirish")
 async def admin_delete_book(message: types.Message):
     await message.answer(
         text="O'chirmoqchi bo'lgan kitobingizni tanlang",
