@@ -160,7 +160,7 @@ async def download_users(message: types.Message):
         )
         book_name = get_book['table_name']
         result = str(n['result'])
-        send_to_xls = zip(created_at, full_name, book_name, result)
-    print(list(send_to_xls))
+        send_to_xls.append([created_at, full_name, book_name, result])
+    print(send_to_xls)
     # await export_to_excel(data=all_results, headings=["id", "telegram_id", "book_id", ],
     #                       filepath=file_path_)
