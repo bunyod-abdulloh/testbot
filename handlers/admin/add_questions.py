@@ -15,7 +15,7 @@ from states import AdminState
 router = Router()
 
 
-@router.message(IsBotAdminFilter(ADMINS), F.text == "➕ Savollar qo'shish")
+@router.message(IsBotAdminFilter(ADMINS), F.text == "Savollar qo'shish")
 async def start_state_add_db(message: types.Message):
     await message.answer(
         text="Savol qo'shmoqchi bo'lgan kitobingizni tanlang",

@@ -6,7 +6,7 @@ from aiogram.utils import keyboard
 from data.config import ADMINS
 from filters import IsBotAdminFilter
 from handlers.users.start import uz_start_buttons
-from keyboards.reply.admin_buttons import admin_tugmalari
+from keyboards.reply.admin_buttons import admin_main_kb
 from loader import db
 
 router = Router()
@@ -31,7 +31,7 @@ async def books_menu(callback_text):
 async def admins_main(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer(
-        text="Kerakli bo'limni tanlang", reply_markup=admin_tugmalari
+        text="Kerakli bo'limni tanlang", reply_markup=admin_main_kb
     )
 
 
