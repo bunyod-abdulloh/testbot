@@ -62,7 +62,7 @@ class Database:
         return await self.execute(sql, full_name, telegram_id, fetchrow=True)
 
     async def select_all_users(self):
-        sql = "SELECT * FROM Users"
+        sql = "SELECT telegram_id, full_name FROM Users"
         return await self.execute(sql, fetch=True)
 
     async def select_user(self, telegram_id):

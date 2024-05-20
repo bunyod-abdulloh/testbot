@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import os
 
 from aiogram import Router, F, types
 from aiogram.client.session.middlewares.request_logging import logger
@@ -137,17 +138,15 @@ async def unblock_all_users(message: types.Message):
 
 @router.message(F.text == "🔘 Excel yuklab olish")
 async def download_users(message: types.Message):
-    # date = datetime.datetime.now().date()
-    # all_users = await db.select_all_users()
-    # file_path = f"downloads/documents/USERS_{date}.xlsx"
-    # await export_to_excel(data=all_users, headings=["id", "full_name", "telegram_id"],
-    #                       filepath=file_path)
+    date = datetime.datetime.now().date()
+    all_users = await db.select_all_users()
+    file_path = f"downloads/USERS_{date}.xlsx"
+    await export_to_excel(data=all_users, headings=["telegram_id", "full_name"],
+                          filepath=file_path)
+    await message.answer_document(types.input_file.FSInputFile(file_path))
+
     all_results = await db.select_all_results()
-    # file_path_ = f"downloads/documents/RESULTS_{date}.xlsx"
-    # created_at = str()
-    # full_name = str()
-    # book_name = str()
-    # result = str()
+    file_path_ = f"downloads/RESULTS_{date}.xlsx"
     send_to_xls = list()
     for n in all_results:
         created_at = str(n['created_at'])
@@ -161,6 +160,8 @@ async def download_users(message: types.Message):
         book_name = get_book['table_name']
         result = str(n['result'])
         send_to_xls.append([created_at, full_name, book_name, result])
-    print(send_to_xls)
-    # await export_to_excel(data=all_results, headings=["id", "telegram_id", "book_id", ],
-    #                       filepath=file_path_)
+    await export_to_excel(data=send_to_xls, headings=["created_at", "full_name", "book_name", "result"],
+                          filepath=file_path_)
+    await message.answer_document(types.input_file.FSInputFile(file_path_))
+    os.remove(file_path)
+    os.remove(file_path_)
