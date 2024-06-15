@@ -9,7 +9,7 @@ from aiogram.fsm.context import FSMContext
 from data.config import ADMINS
 from filters import IsBotAdminFilter
 from keyboards.inline.buttons import are_you_sure_markup
-from keyboards.reply.admin_buttons import admin_tugmalari
+from keyboards.reply.admin_buttons import admin_main_kb
 from loader import db, bot
 from states import AdminState
 from utils.pgtoexcel import export_to_excel
@@ -70,7 +70,7 @@ async def admin_delete_users(message: types.Message):
 @router.message(F.text == "🔙 Ortga")
 async def back_admin_main(message: types.Message):
     await message.answer(
-        text=message.text, reply_markup=admin_tugmalari
+        text=message.text, reply_markup=admin_main_kb
     )
 
 
