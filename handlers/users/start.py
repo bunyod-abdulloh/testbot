@@ -29,26 +29,26 @@ uz_check_buttons = check_user_ibuttons(
 )
 
 
-# @router.message(CommandStart())
-# async def main_start(message: types.Message, state: FSMContext):
-#     await state.clear()
-#     telegram_id = message.from_user.id
-#     full_name = message.from_user.full_name
-#     check_from_db = await db.select_user(
-#         telegram_id=telegram_id
-#     )
-#     # Users jadvalidan game_on ustunini FALSE holatiga tushirish
-#     await db.edit_status_users(
-#         game_on=False, telegram_id=telegram_id
-#     )
-#     try:
-#         if check_from_db:
-#             pass
-#         else:
-#             await db.add_user(telegram_id=telegram_id, full_name=full_name)
-#     except Exception as error:
-#         logger.info(error)
-#     await message.answer(
-#         text="Assalomu alaykum!",
-#         reply_markup=uz_start_buttons
-#     )
+@router.message(CommandStart())
+async def main_start(message: types.Message, state: FSMContext):
+    await state.clear()
+    telegram_id = message.from_user.id
+    full_name = message.from_user.full_name
+    check_from_db = await db.select_user(
+        telegram_id=telegram_id
+    )
+    # Users jadvalidan game_on ustunini FALSE holatiga tushirish
+    await db.edit_status_users(
+        game_on=False, telegram_id=telegram_id
+    )
+    try:
+        if check_from_db:
+            pass
+        else:
+            await db.add_user(telegram_id=telegram_id, full_name=full_name)
+    except Exception as error:
+        logger.info(error)
+    await message.answer(
+        text="Assalomu alaykum!",
+        reply_markup=uz_start_buttons
+    )

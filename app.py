@@ -42,7 +42,7 @@ async def database_connected():
     # await db.drop_table_users()
     # await db.drop_table_tables()
     # await db.drop_table_temporary()
-    await db.drop_table_results()
+    # await db.drop_table_results()
     # await db.drop_table_sos()
     await db.create_table_users()
     await db.create_table_tables()
