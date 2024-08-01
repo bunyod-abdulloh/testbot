@@ -1,11 +1,10 @@
-import random
 from datetime import datetime
 
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.users.battle_main import result_time_game
+from handlers.users.functions import get_builder
 from handlers.users.random_first import first_text
 from loader import db
 
@@ -13,23 +12,16 @@ router = Router()
 
 
 async def generate_question_alone(book_id, counter, call: types.CallbackQuery):
-    questions = await db.select_all_questions(table_name=f"table_{book_id}")
-    question_id = questions[0]['id']
-    letters = ["A", "B", "C", "D"]
+    builder_ = await get_builder(
+        book_id=book_id
+    )
+    question_id = builder_[0]
+    questions_text = builder_[1]
+    letters = builder_[2]
+    answers = builder_[3]
+    builder = builder_[4]
+    questions = builder_[5]
 
-    a = ["a", f"{questions[0]['a_correct']}"]
-    b = ["b", f"{questions[0]['b']}"]
-    c = ["c", f"{questions[0]['c']}"]
-    d = ["d", f"{questions[0]['d']}"]
-
-    answers = [a, b, c, d]
-    random.shuffle(answers)
-    questions_text = str()
-
-    for letter, question in zip(letters, answers):
-        questions_text += f"{letter}) {question[1]}\n"
-
-    builder = InlineKeyboardBuilder()
     for letter, callback in zip(letters, answers):
         builder.add(
             types.InlineKeyboardButton(

@@ -1,21 +1,16 @@
 from typing import Dict, Any
 
-from aiogram import Router, types, F
-from aiogram.enums import ChatMemberStatus
-from aiogram.filters import CommandStart, ChatMemberUpdatedFilter, IS_MEMBER, IS_NOT_MEMBER, chat_member_updated, LEFT, \
-    CommandObject
+from aiogram import Router, types
+from aiogram.filters import CommandStart
 
 from aiogram.client.session.middlewares.request_logging import logger
 from aiogram.fsm.context import FSMContext
-from aiogram.utils.deep_linking import create_start_link
-from aiogram.utils.payload import decode_payload
 
 from filters import ChatTypeFilter
 from keyboards.inline.buttons import check_user_ibuttons
 from keyboards.reply.main_reply import main_button
-from loader import db, bot
-from data.config import ADMINS, GROUP_ID
-from states.test import UserSOS
+from loader import db
+
 
 router = Router()
 router.message.filter(ChatTypeFilter(["private"]))
@@ -49,6 +44,7 @@ async def main_start(message: types.Message, state: FSMContext):
     except Exception as error:
         logger.info(error)
     await message.answer(
-        text="Assalomu alaykum!",
+        text="Assalomu alaykum! Botimizdan foydalanishdan oldin quyidagi havola orqali <b>ℹ️ Qo'llanma</b>mizni o'qib "
+             "chiqishingizni so'raymiz:\n\n",
         reply_markup=uz_start_buttons
     )
