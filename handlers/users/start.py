@@ -45,6 +45,7 @@ async def main_start(message: types.Message, state: FSMContext):
         logger.info(error)
     await message.answer(
         text="Assalomu alaykum! Botimizdan foydalanishdan oldin quyidagi havola orqali <b>ℹ️ Qo'llanma</b>mizni o'qib "
-             "chiqishingizni so'raymiz:\n\n",
+             "chiqishingizni so'raymiz:\n\n"
+             "https://telegra.ph/Testchi-Robot--Qollanma-05-27",
         reply_markup=uz_start_buttons
     )

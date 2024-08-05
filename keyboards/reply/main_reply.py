@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, KeyboardButtonRequestUser, KeyboardButtonRequestUsers
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, KeyboardButtonRequestUser
 
 
 def main_button(competition: str, rating: str, manual: str, questions: str):

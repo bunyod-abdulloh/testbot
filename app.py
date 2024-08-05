@@ -79,7 +79,8 @@ def main():
     from aiogram.fsm.storage.memory import MemoryStorage
 
     allowed_updates = ['message', 'chat_member', 'callback_query']
-    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    default_properties = DefaultBotProperties(parse_mode=ParseMode.HTML)
+    bot = Bot(token=BOT_TOKEN, default=default_properties)
     storage = MemoryStorage()
     dispatcher = Dispatcher(storage=storage, fsm_strategy=FSMStrategy.CHAT)
     dispatcher.startup.register(aiogram_on_startup_polling)

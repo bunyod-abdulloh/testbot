@@ -1,10 +1,8 @@
-import random
 from datetime import datetime
 
 import aiogram.exceptions
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.users.battle_main import result_time_game
 from handlers.users.functions import get_builder
@@ -29,7 +27,7 @@ async def generate_question(book_id, counter, call: types.CallbackQuery, battle_
 
     if opponent:
         for letter, callback in zip(letters, answers):
-            builder_['builder'].add(
+            builder.add(
                 types.InlineKeyboardButton(
                     text=f"{letter}",
                     callback_data=f"s_question:{callback[0]}:{book_id}:{battle_id}:{question_id}"
