@@ -65,7 +65,7 @@ async def rating_overall(callback_query: types.CallbackQuery):
 @router.callback_query(F.data == "rating_by_book")
 async def rating_by_book(callback_query: types.CallbackQuery):
     await callback_query.message.edit_text(
-        text="Kerakli kitobni tanlang", reply_markup=await rating_books_kb()
+        text="Kerakli bosqichni tanlang", reply_markup=await rating_books_kb()
     )
 
 
@@ -95,7 +95,7 @@ async def get_rating_book(callback_query: types.CallbackQuery):
             user_rating += index
 
     await callback_query.message.edit_text(
-        text=f"{book_name} kitobi bo'yicha reyting.\nTOP 20:\n\n{rating_text}"
+        text=f"{book_name} bosqichi bo'yicha reyting.\nTOP 20:\n\n{rating_text}"
              f"\n<b>{book_name} kitobi reytingida Siz {user_rating} - o'rindasiz!</b>"
              f"\n\n<i>* Izoh:\nMabodo boshqa ishtirokchilar bilan to'plagan ballaringiz bir xil lekin o'rinlar xar "
              f"hil bo'lsa, bot eng kam vaqt sarflab, eng ko'p to'g'ri javob bergan ishtirokchini yuqoriroq o'ringa "

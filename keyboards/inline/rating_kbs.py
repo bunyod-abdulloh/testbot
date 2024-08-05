@@ -12,7 +12,7 @@ def rating_main_kb():
                     text="📚 Umumiy", callback_data="rating_overall"
                 ),
                 InlineKeyboardButton(
-                    text="📖 Kitob bo'yicha", callback_data="rating_by_book"
+                    text="📖 Bosqich bo'yicha", callback_data="rating_by_book"
                 )
             ],
             [
