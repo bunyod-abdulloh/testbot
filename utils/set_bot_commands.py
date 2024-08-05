@@ -6,7 +6,6 @@ from aiogram.types import BotCommandScopeAllPrivateChats
 async def set_default_commands(bot: Bot):
     commands = [
         BotCommand(command="/start", description="Botni ishga tushirish"),
-        BotCommand(command="/admins", description="Adminlar bo'limi"),
-        BotCommand(command="/view", description="Adminlar bo'limi")
+        BotCommand(command="/admins", description="Adminlar bo'limi")
     ]
     await bot.set_my_commands(commands=commands, scope=BotCommandScopeAllPrivateChats())
