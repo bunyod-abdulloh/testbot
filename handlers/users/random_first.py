@@ -148,7 +148,6 @@ async def send_result_or_continue(answer_emoji, call: types.CallbackQuery, state
             telegram_id=first_telegram_id, battle_id=battle_id
         )
         # O'yin boshlangan va tugagan vaqtni hisoblash
-        print(start_time)
         difference = await result_time_game(
             start_time=start_time[0]['start_time'], end_time=end_time
         )
