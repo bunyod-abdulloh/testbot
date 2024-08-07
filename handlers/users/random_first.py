@@ -302,7 +302,7 @@ async def get_random_in_battle(call: types.CallbackQuery):
 
 @router.callback_query(F.data.startswith("play_b:"))
 async def start_playing(call: types.CallbackQuery, state: FSMContext):
-    book_id = call.data.split(":")[1]
+    book_id = int(call.data.split(":")[1])
     battle_id = int(call.data.split(":")[2])
     first_player_id = call.from_user.id
     c = 1
