@@ -65,15 +65,18 @@ async def get_opponent(call: types.CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith("refusal:"))
 async def get_refusal(call: types.CallbackQuery):
-    first_player = call.data.split(":")[1]
-    first_fullname = call.from_user.full_name
+    user_id = call.data.split(":")[1]
+    first_player = await db.select_user(
+        telegram_id=user_id
+    )
+    second_fullname = call.from_user.id
     try:
         await bot.send_message(
             chat_id=first_player,
-            text=f"Foydalanuvchi {first_fullname} bellashuvni rad etdi!"
+            text=f"Foydalanuvchi {second_fullname} bellashuvni rad etdi!"
         )
         await call.message.edit_text(
-            text=f"Habaringiz {first_fullname}ga yuborildi!"
+            text=f"Habaringiz {first_player['full_name']}ga yuborildi!"
         )
     except aiogram.exceptions.TelegramForbiddenError:
         await db.userni_ochir(
