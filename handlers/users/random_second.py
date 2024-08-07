@@ -69,11 +69,11 @@ async def get_refusal(call: types.CallbackQuery):
     first_player = await db.select_user(
         telegram_id=user_id
     )
-    second_fullname = call.from_user.id
+    second_fullname = call.from_user.full_name
     try:
         await bot.send_message(
             chat_id=first_player,
-            text=f"Foydalanuvchi {second_fullname} bellashuvni rad etdi!"
+            text=f"Foydalanuvchi {second_fullname} bellashuvni rad etdi! {first_player['full_name']}"
         )
         await call.message.edit_text(
             text=f"Habaringiz {first_player['full_name']}ga yuborildi!"
