@@ -73,7 +73,7 @@ async def get_refusal(call: types.CallbackQuery):
     try:
         await bot.send_message(
             chat_id=user_id,
-            text=f"Foydalanuvchi {second_fullname} bellashuvni rad etdi! {first_player['full_name']}"
+            text=f"Foydalanuvchi {second_fullname} bellashuvni rad etdi!"
         )
         await call.message.edit_text(
             text=f"Habaringiz {first_player['full_name']}ga yuborildi!"
